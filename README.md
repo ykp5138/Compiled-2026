@@ -4,7 +4,20 @@
 
 A self-improving team of three AI agents (DeepSeek on Luminal Cloud) that optimizes traffic-signal control policies for a simplified, synthetic simulation of downtown State College, PA. Built for *Track 1 · Challenge A: Build a Self-Improving Agent Team*.
 
-- **Agents:** each round, three concurrent model calls (Corridor Coordinator, Queue Optimizer, Robustness Optimizer) each propose one declarative JSON signal policy.
+The UI has **four layouts** from the Claude Design canvas, switchable at the top of the page (or with `#a`–`#d` in the URL):
+
+| Layout | Style |
+|---|---|
+| **A · Ops command center** | dense, dark |
+| **B · Story mode** | a five-chapter narrative for judges |
+| **C · Split-screen versus** | baseline vs champion with a live head-to-head scoreboard and a tabbed drawer |
+| **D · Lab notebook** | a round-by-round experiment log with a sticky replay |
+
+All four show the same live data and replays.
+
+The UI's **Parallel agent timeline** draws every recorded model call as a bar, so you can see the agents in a round running at the same time, and how much wall-clock time parallelism saves compared with running them one after another.
+
+- **Agents:** each round, six concurrent model calls each propose one declarative JSON signal policy. There are three roles, each with its own parameter area: the Corridor Coordinator (coordination and offsets), the Queue Optimizer (adaptive weights, holds and hysteresis) and the Robustness Optimizer (max greens, oldest-wait and phase bias). Each role runs as two variants: **refine**, an incremental change to the champion, and **explore**, a structurally different idea.
 - **Orchestrator:** ordinary code. It validates proposals, simulates them on identical training scenarios, checks promising ones on a development suite with a predefined selection rule, keeps or replaces the champion, and feeds measured outcomes back into the next round.
 - **Final test:** after freezing, the champion is tested once on a **held-out suite that the optimization loop never sees**.
 - **Demo:** two synchronized animated maps, a baseline controller on the left and the selected agent-designed controller on the right, both replaying the same recorded deterministic simulation demand.
@@ -32,8 +45,9 @@ npm run dev               # UI on http://localhost:5173, API on :8787
 | `LUMINAL_API_KEY` | Luminal key (server-side only; never sent to the browser or written to reports) |
 | `LUMINAL_BASE_URL` | `https://flash.luminal.cloud/v1` (OpenAI-compatible chat completions) |
 | `LUMINAL_MODEL` | `deepseek-ai/DeepSeek-V4.1-Flash` |
-| `LUMINAL_TIMEOUT_MS`, `LUMINAL_MAX_TOKENS`, `LUMINAL_MAX_CONCURRENCY` | Call limits (defaults 300000 / 32000 / 3) |
+| `LUMINAL_TIMEOUT_MS`, `LUMINAL_MAX_TOKENS`, `LUMINAL_MAX_CONCURRENCY` | Call limits (defaults 300000 / 32000 / 6) |
 | `AGENT_PROVIDER=mock` | Forces the development provider |
+| `VARIANTS_PER_ROLE` | 2 (default) = six agents; 1 = three agents |
 | `ROUNDS`, `SIM_HORIZON`, `SIM_DRAIN`, `TRAIN_EPISODES`, `DEV_EPISODES`, `HELDOUT_EPISODES` | Experiment size |
 
 Without Luminal credentials the app runs with a **development provider** that makes random perturbations. It is labelled "Development provider · not Luminal" everywhere and its candidates carry a `dev mock` badge.

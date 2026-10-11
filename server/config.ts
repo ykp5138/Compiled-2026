@@ -23,12 +23,14 @@ export const config = {
     baseUrl: (process.env.LUMINAL_BASE_URL ?? "").replace(/\/+$/, ""),
     model: process.env.LUMINAL_MODEL ?? "",
     timeoutMs: Number(process.env.LUMINAL_TIMEOUT_MS ?? 300000),
-    maxConcurrency: Number(process.env.LUMINAL_MAX_CONCURRENCY ?? 3),
+    maxConcurrency: Number(process.env.LUMINAL_MAX_CONCURRENCY ?? 6),
     maxRetries: 3,
     maxTokens: Number(process.env.LUMINAL_MAX_TOKENS ?? 32000),
   },
   experiment: {
     rounds: Number(process.env.ROUNDS ?? 5),
+    /** 2 = six concurrent agents (refine + explore per role); 1 = three. */
+    variantsPerRole: Number(process.env.VARIANTS_PER_ROLE ?? 2),
     horizon: Number(process.env.SIM_HORIZON ?? 900),
     drain: Number(process.env.SIM_DRAIN ?? 300),
     train: { count: Number(process.env.TRAIN_EPISODES ?? 8), seedBase: 1001 },

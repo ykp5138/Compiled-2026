@@ -1,0 +1,228 @@
+{
+ "llmRunId": "run-20261011-164124",
+ "heldOutEpisodes": 12,
+ "budget": {
+  "proposersPerRound": 6,
+  "rounds": 6,
+  "candidates": 36
+ },
+ "heuristic": 31.800118202230113,
+ "fixed": 36.40415784844321,
+ "llmAgents": {
+  "heldOutScore": 28.24404977144953,
+  "vsHeuristicPct": 11.182563562078837,
+  "wins": 12,
+  "losses": 0,
+  "signTestP": 0.00048828125,
+  "devScore": 28.660882206885972
+ },
+ "randomSearch": {
+  "seeds": [
+   {
+    "seed": 0,
+    "candidates": 36,
+    "accepted": 2,
+    "devScore": 32.99158865497651,
+    "heldOutScore": 30.95289601908712,
+    "vsHeuristicPct": 2.6642107986994144,
+    "vsHeuristicWins": 7,
+    "vsHeuristicLosses": 5,
+    "vsFixedPct": 14.974283575108743,
+    "perScenario": [
+     {
+      "scenarioId": "heldout-balanced-80582",
+      "score": 22.475250836120402
+     },
+     {
+      "scenarioId": "heldout-arterial-80583",
+      "score": 24.673208722741432
+     },
+     {
+      "scenarioId": "heldout-side-80584",
+      "score": 39.809649122807016
+     },
+     {
+      "scenarioId": "heldout-bursty-80585",
+      "score": 26.73274695534506
+     },
+     {
+      "scenarioId": "heldout-shift-80586",
+      "score": 24.99189736664416
+     },
+     {
+      "scenarioId": "heldout-balanced-80587",
+      "score": 41.13126079447323
+     },
+     {
+      "scenarioId": "heldout-arterial-80588",
+      "score": 25.579545454545453
+     },
+     {
+      "scenarioId": "heldout-side-80589",
+      "score": 32.71850273889227
+     },
+     {
+      "scenarioId": "heldout-bursty-80590",
+      "score": 44.34744707347447
+     },
+     {
+      "scenarioId": "heldout-shift-80591",
+      "score": 37.26183602771363
+     },
+     {
+      "scenarioId": "heldout-balanced-80592",
+      "score": 27.27396413110699
+     },
+     {
+      "scenarioId": "heldout-arterial-80593",
+      "score": 24.439443005181346
+     }
+    ]
+   },
+   {
+    "seed": 1,
+    "candidates": 36,
+    "accepted": 2,
+    "devScore": 31.686644570978928,
+    "heldOutScore": 30.005729903544264,
+    "vsHeuristicPct": 5.642709524771546,
+    "vsHeuristicWins": 9,
+    "vsHeuristicLosses": 3,
+    "vsFixedPct": 17.576091092497474,
+    "perScenario": [
+     {
+      "scenarioId": "heldout-balanced-80582",
+      "score": 21.92876254180602
+     },
+     {
+      "scenarioId": "heldout-arterial-80583",
+      "score": 26.603426791277258
+     },
+     {
+      "scenarioId": "heldout-side-80584",
+      "score": 40.666666666666664
+     },
+     {
+      "scenarioId": "heldout-bursty-80585",
+      "score": 27.980378890392423
+     },
+     {
+      "scenarioId": "heldout-shift-80586",
+      "score": 22.956448345712356
+     },
+     {
+      "scenarioId": "heldout-balanced-80587",
+      "score": 35.47092688543466
+     },
+     {
+      "scenarioId": "heldout-arterial-80588",
+      "score": 24.162987012987013
+     },
+     {
+      "scenarioId": "heldout-side-80589",
+      "score": 29.99756542909312
+     },
+     {
+      "scenarioId": "heldout-bursty-80590",
+      "score": 46.467310087173104
+     },
+     {
+      "scenarioId": "heldout-shift-80591",
+      "score": 33.71824480369515
+     },
+     {
+      "scenarioId": "heldout-balanced-80592",
+      "score": 26.38126159554731
+     },
+     {
+      "scenarioId": "heldout-arterial-80593",
+      "score": 23.734779792746114
+     }
+    ]
+   },
+   {
+    "seed": 2,
+    "candidates": 36,
+    "accepted": 2,
+    "devScore": 33.29489752807709,
+    "heldOutScore": 30.2968888870182,
+    "vsHeuristicPct": 4.727118640415916,
+    "vsHeuristicWins": 10,
+    "vsHeuristicLosses": 2,
+    "vsFixedPct": 16.776295133238975,
+    "perScenario": [
+     {
+      "scenarioId": "heldout-balanced-80582",
+      "score": 20.890635451505016
+     },
+     {
+      "scenarioId": "heldout-arterial-80583",
+      "score": 25.261682242990656
+     },
+     {
+      "scenarioId": "heldout-side-80584",
+      "score": 42.38976608187134
+     },
+     {
+      "scenarioId": "heldout-bursty-80585",
+      "score": 25.397496617050066
+     },
+     {
+      "scenarioId": "heldout-shift-80586",
+      "score": 24.399054692775152
+     },
+     {
+      "scenarioId": "heldout-balanced-80587",
+      "score": 37.043465745538285
+     },
+     {
+      "scenarioId": "heldout-arterial-80588",
+      "score": 24.35616883116883
+     },
+     {
+      "scenarioId": "heldout-side-80589",
+      "score": 32.57790626902008
+     },
+     {
+      "scenarioId": "heldout-bursty-80590",
+      "score": 44.52272727272727
+     },
+     {
+      "scenarioId": "heldout-shift-80591",
+      "score": 37.18187066974596
+     },
+     {
+      "scenarioId": "heldout-balanced-80592",
+      "score": 25.819418676561533
+     },
+     {
+      "scenarioId": "heldout-arterial-80593",
+      "score": 23.72247409326425
+     }
+    ]
+   }
+  ],
+  "meanHeldOutScore": 30.418504936549862,
+  "meanVsHeuristicPct": 4.344679654628958
+ },
+ "llmVsRandom": [
+  {
+   "seed": 0,
+   "llmWins": 11,
+   "of": 12,
+   "relPct": 8.751511477204525
+  },
+  {
+   "seed": 1,
+   "llmWins": 10,
+   "of": 12,
+   "relPct": 5.871145737023536
+  },
+  {
+   "seed": 2,
+   "llmWins": 9,
+   "of": 12,
+   "relPct": 6.7757422989008065
+  }
+ ]
+}

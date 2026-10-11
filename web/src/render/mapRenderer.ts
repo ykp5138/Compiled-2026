@@ -11,28 +11,61 @@ export interface ViewTransform {
 export interface RenderOptions {
   heat: boolean;
   label: string;
+  palette: MapPalette;
 }
 
-const COLORS = {
-  bg: "#0f1419",
-  campus: "#15261c",
-  campusEdge: "#244232",
-  campusText: "#6f9c80",
-  block: "#141a21",
-  road: "#2a313b",
-  roadEdge: "#3a4350",
-  laneDash: "rgba(226,232,240,0.28)",
-  center: "rgba(234,179,8,0.55)",
-  car: "#d7dee8",
-  carStroke: "#0b0f14",
-  brake: "#f87171",
-  green: "#22c55e",
-  yellow: "#facc15",
-  red: "#ef4444",
-  label: "#94a3b8",
-  labelStrong: "#e2e8f0",
-  landmark: "#3b2f22",
-  landmarkEdge: "#8a6b45",
+export interface MapPalette {
+  bg: string;
+  block: string;
+  campus: string;
+  campusEdge: string;
+  campusText: string;
+  road: string;
+  roadEdge: string;
+  laneDash: string;
+  center: string;
+  car: string;
+  carStroke: string;
+  brake: string;
+  green: string;
+  yellow: string;
+  red: string;
+  head: string;
+  label: string;
+  halo: string;
+  landmark: string;
+  landmarkEdge: string;
+  landmarkText: string;
+  faint: string;
+  font: string;
+}
+
+/** One palette per layout (Claude Design directions A–D). Cars are the same neutral style in both panels. */
+export const PALETTES: Record<string, MapPalette> = {
+  a: {
+    bg: "#1a2029", block: "#1f2630", campus: "#1c3a31", campusEdge: "#27493d", campusText: "#7fc29b",
+    road: "#3a4453", roadEdge: "#12171e", laneDash: "rgba(226,232,240,0.28)", center: "rgba(217,171,87,0.55)",
+    car: "#d5d9de", carStroke: "#0b0f14", brake: "#f0524b", green: "#2fd27e", yellow: "#f7c843", red: "#f0524b", head: "#0a0d12",
+    label: "#b4becb", halo: "#12171e", landmark: "#27493d", landmarkEdge: "#5f8f76", landmarkText: "#a7d6b9", faint: "#6b7480", font: "Geist, system-ui, sans-serif",
+  },
+  b: {
+    bg: "#ece6d8", block: "#e2dbca", campus: "#cfe0c6", campusEdge: "#a9c39c", campusText: "#23573a",
+    road: "#fbf8f1", roadEdge: "#c9c0ac", laneDash: "rgba(88,96,88,0.35)", center: "rgba(217,152,43,0.7)",
+    car: "#4d544e", carStroke: "#fbf8f1", brake: "#c7352c", green: "#1e7a46", yellow: "#d9982b", red: "#c7352c", head: "#17201b",
+    label: "#17201b", halo: "#f6f1e7", landmark: "#b2cdae", landmarkEdge: "#5f8a63", landmarkText: "#23573a", faint: "#8a8672", font: "'Hanken Grotesk', system-ui, sans-serif",
+  },
+  c: {
+    bg: "#101113", block: "#17191c", campus: "#18291f", campusEdge: "#24402f", campusText: "#97cdaa",
+    road: "#2b2e33", roadEdge: "#0b0c0e", laneDash: "rgba(213,217,222,0.25)", center: "rgba(242,180,65,0.55)",
+    car: "#d5d9de", carStroke: "#0b0c0e", brake: "#f0524b", green: "#2fd27e", yellow: "#f2b441", red: "#f0524b", head: "#0b0c0e",
+    label: "#d5d9de", halo: "#0b0c0e", landmark: "#24402f", landmarkEdge: "#5f8f76", landmarkText: "#97cdaa", faint: "#7c838c", font: "Barlow, system-ui, sans-serif",
+  },
+  d: {
+    bg: "#e7e9ec", block: "#dcdfe3", campus: "#cfe3d3", campusEdge: "#a8c9b0", campusText: "#1f5a38",
+    road: "#ffffff", roadEdge: "#c3c8cf", laneDash: "rgba(90,98,109,0.35)", center: "rgba(217,119,6,0.6)",
+    car: "#5a626d", carStroke: "#ffffff", brake: "#dc2626", green: "#15803d", yellow: "#d97706", red: "#dc2626", head: "#1b1f24",
+    label: "#1b1f24", halo: "#edeff2", landmark: "#afcfb8", landmarkEdge: "#5f8a6a", landmarkText: "#1f5a38", faint: "#7b838e", font: "'Schibsted Grotesk', system-ui, sans-serif",
+  },
 };
 
 export function fitTransform(net: Network, w: number, h: number): ViewTransform {
@@ -113,41 +146,67 @@ export function drawFrame(
   const X = (x: number) => ox + x * scale;
   const Y = (y: number) => oy + y * scale;
   const W = visualLaneWidth(net, scale);
+  const P = opts.palette;
+  const F = (weight: number, px: number) => `${weight} ${px}px ${P.font}`;
 
-  ctx.fillStyle = COLORS.bg;
+  ctx.fillStyle = P.bg;
   ctx.fillRect(0, 0, cssW, cssH);
+
+  // Downtown blocks between modeled streets (context only).
+  {
+    const b = net.raw.map.bounds;
+    const xs = [b.minX, 0, 400, 560, b.maxX];
+    const ys = [0, 140, b.maxY];
+    const m = 16;
+    ctx.fillStyle = P.block;
+    for (let i = 0; i < xs.length - 1; i++) {
+      for (let j = 0; j < ys.length - 1; j++) {
+        const x0 = xs[i] + (i === 0 ? 0 : m);
+        const x1 = xs[i + 1] - (i === xs.length - 2 ? 0 : m);
+        const y0 = ys[j] + m;
+        const y1 = ys[j + 1] - (j === ys.length - 2 ? 0 : m);
+        if (x1 - x0 > 4 && y1 - y0 > 4) {
+          roundRect(ctx, X(x0), Y(y0), (x1 - x0) * scale, (y1 - y0) * scale, 4);
+          ctx.fill();
+        }
+      }
+    }
+    // west of Atherton, north of College
+    roundRect(ctx, X(b.minX), Y(b.minY), (0 - m - b.minX) * scale, (0 - m - b.minY) * scale, 4);
+    ctx.fill();
+  }
 
   // Campus and landmarks (context only, not modeled roads).
   const c = net.raw.map.campus;
-  ctx.fillStyle = COLORS.campus;
-  ctx.strokeStyle = COLORS.campusEdge;
+  ctx.fillStyle = P.campus;
+  ctx.strokeStyle = P.campusEdge;
   ctx.lineWidth = 1;
   roundRect(ctx, X(c.x0), Y(c.y0), (c.x1 - c.x0) * scale, (c.y1 - c.y0) * scale, 10);
   ctx.fill();
   ctx.stroke();
-  ctx.fillStyle = COLORS.campusText;
-  ctx.font = `600 ${Math.max(10, 12 * scale * 1.6)}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = P.campusText;
+  ctx.font = F(600, Math.max(10, 12 * scale * 1.6));
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
   ctx.fillText(c.label, X(c.x0) + 10, Y(c.y0) + 8);
   for (const lm of net.raw.map.landmarks) {
-    ctx.fillStyle = COLORS.landmark;
-    ctx.strokeStyle = COLORS.landmarkEdge;
+    ctx.fillStyle = P.landmark;
+    ctx.strokeStyle = P.landmarkEdge;
     roundRect(ctx, X(lm.x - lm.w / 2), Y(lm.y - lm.h / 2), lm.w * scale, lm.h * scale, 3);
     ctx.fill();
     ctx.stroke();
     // small bell tower
-    ctx.fillStyle = COLORS.landmarkEdge;
+    ctx.fillStyle = P.landmarkEdge;
     ctx.fillRect(X(lm.x) - 3 * scale, Y(lm.y - lm.h / 2) - 12 * scale, 6 * scale, 12 * scale);
-    ctx.fillStyle = "#c9a878";
-    ctx.font = `600 ${Math.max(10, 11 * scale * 1.6)}px Inter, system-ui, sans-serif`;
+    ctx.fillStyle = P.landmarkText;
+    ctx.font = F(600, Math.max(10, 11 * scale * 1.6));
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillText(lm.label, X(lm.x), Y(lm.y + lm.h / 2) + 4);
   }
   const dl = net.raw.map.downtownLabel;
-  ctx.fillStyle = "#475569";
-  ctx.font = `600 ${Math.max(10, 11 * scale * 1.6)}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = P.faint;
+  ctx.font = F(600, Math.max(10, 11 * scale * 1.6));
   ctx.textAlign = "center";
   ctx.fillText(dl.text, X(dl.x), Y(dl.y));
 
@@ -156,10 +215,10 @@ export function drawFrame(
   ctx.lineCap = "butt";
   for (const s of segs) {
     const width = (s.lanesFwd + s.lanesBack) * W + 2;
-    ctx.strokeStyle = COLORS.roadEdge;
+    ctx.strokeStyle = P.roadEdge;
     ctx.lineWidth = (width + 1.2) * scale;
     line(ctx, X(s.a.x), Y(s.a.y), X(s.b.x), Y(s.b.y));
-    ctx.strokeStyle = COLORS.road;
+    ctx.strokeStyle = P.road;
     ctx.lineWidth = width * scale;
     line(ctx, X(s.a.x), Y(s.a.y), X(s.b.x), Y(s.b.y));
   }
@@ -190,14 +249,14 @@ export function drawFrame(
     const ry = l.ux;
     for (let lane = 0; lane < l.lanes - 1; lane++) {
       const off = l.twoWay ? (lane + 1) * W : (lane + 1 - l.lanes / 2) * W;
-      ctx.strokeStyle = COLORS.laneDash;
+      ctx.strokeStyle = P.laneDash;
       line(ctx, X(l.x0 + rx * off), Y(l.y0 + ry * off), X(l.x1 + rx * off), Y(l.y1 + ry * off));
     }
   }
   ctx.setLineDash([]);
   for (const l of net.links) {
     if (!l.twoWay || l.ux + l.uy < 0) continue; // draw centre line once per two-way pair
-    ctx.strokeStyle = COLORS.center;
+    ctx.strokeStyle = P.center;
     ctx.lineWidth = Math.max(0.8, 0.3 * scale);
     line(ctx, X(l.x0), Y(l.y0), X(l.x1), Y(l.y1));
   }
@@ -205,13 +264,13 @@ export function drawFrame(
   // Intersection boxes.
   const inset = net.raw.intersectionInset;
   for (const inter of net.intersections) {
-    ctx.fillStyle = COLORS.road;
+    ctx.fillStyle = P.road;
     ctx.fillRect(X(inter.x - inset), Y(inter.y - inset), inset * 2 * scale, inset * 2 * scale);
   }
 
   // Street labels.
-  ctx.fillStyle = COLORS.labelStrong;
-  ctx.font = `600 ${Math.max(11, 12 * scale * 1.7)}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = P.label;
+  ctx.font = F(600, Math.max(11, 12 * scale * 1.7));
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   for (const sl of net.raw.map.streetLabels) {
@@ -229,7 +288,7 @@ export function drawFrame(
     for (const li of inter.approaches) {
       const l = net.links[li];
       const inPhase = inter.phases[phase].movements.some((mi) => net.movements[mi].from === li);
-      const color = !frame ? COLORS.red : inPhase && state === 0 ? COLORS.green : inPhase && state === 1 ? COLORS.yellow : COLORS.red;
+      const color = !frame ? P.red : inPhase && state === 0 ? P.green : inPhase && state === 1 ? P.yellow : P.red;
       const rx = -l.uy;
       const ry = l.ux;
       const o0 = l.twoWay ? 0.2 : (-l.lanes / 2) * W + 0.2;
@@ -241,7 +300,7 @@ export function drawFrame(
       // signal head
       const hx = l.x1 + rx * (o1 + 2.6);
       const hy = l.y1 + ry * (o1 + 2.6);
-      ctx.fillStyle = "#05070a";
+      ctx.fillStyle = P.head;
       ctx.beginPath();
       ctx.arc(X(hx), Y(hy), Math.max(3, 2.2 * scale), 0, Math.PI * 2);
       ctx.fill();
@@ -288,21 +347,21 @@ export function drawFrame(
       ctx.save();
       ctx.translate(X(x - ux * (len / 2)), Y(y - uy * (len / 2)));
       ctx.rotate(Math.atan2(uy, ux));
-      ctx.fillStyle = COLORS.car;
-      ctx.strokeStyle = COLORS.carStroke;
+      ctx.fillStyle = P.car;
+      ctx.strokeStyle = P.carStroke;
       ctx.lineWidth = 0.6;
       roundRect(ctx, (-len / 2) * scale, (-wid / 2) * scale, len * scale, wid * scale, 0.6 * scale);
       ctx.fill();
       ctx.stroke();
       if (v[i + 3] === 1) {
-        ctx.fillStyle = COLORS.brake;
+        ctx.fillStyle = P.brake;
         ctx.fillRect((-len / 2) * scale, (-wid / 2) * scale, 0.7 * scale, wid * scale);
       }
       ctx.restore();
     }
 
     // External entry queues (vehicles that could not yet enter the map).
-    ctx.font = `700 ${Math.max(10, 11 * scale * 1.6)}px Inter, system-ui, sans-serif`;
+    ctx.font = F(700, Math.max(10, 11 * scale * 1.6));
     net.entries.forEach((li, ei) => {
       const n = frame.e[ei];
       if (!n) return;
@@ -327,12 +386,12 @@ export function drawFrame(
   // Panel caption, disclaimer and north arrow.
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
-  ctx.fillStyle = "#64748b";
-  ctx.font = `500 11px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = P.faint;
+  ctx.font = F(500, 11);
   ctx.fillText(net.raw.disclaimer, 10, cssH - 8);
   ctx.textAlign = "right";
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "700 12px Inter, system-ui, sans-serif";
+  ctx.fillStyle = P.label;
+  ctx.font = F(700, 12);
   ctx.fillText("N ↑", cssW - 12, cssH - 8);
 }
 

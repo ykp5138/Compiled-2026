@@ -14,6 +14,9 @@ export interface CandidateRecord {
   id: string;
   round: number;
   role: RoleId;
+  /** Agent identity, e.g. "corridor-explore" (absent in runs recorded with one variant per role). */
+  agentId?: string;
+  variant?: string;
   roleLabel: string;
   provider: "luminal" | "mock";
   name: string;

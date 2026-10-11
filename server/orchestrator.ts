@@ -31,7 +31,7 @@ import {
   type Scenario,
   type ScenarioType,
 } from "../sim";
-import { buildMessages, parseProposal, repairMessages, ROLES, type AgentContext, type RoleDef, type RoleId } from "./agents";
+import { agentDefs, buildMessages, parseProposal, repairMessages, type AgentContext, type AgentDef, type RoleId } from "./agents";
 import { config } from "./config";
 import { generateHeldOutSuite } from "./heldout";
 import { createProvider, type AgentProvider } from "./providers";
@@ -41,7 +41,9 @@ import type { BaselineRecord, CandidateRecord, Experiment, SuiteResult } from ".
 export type AgentPhase = "idle" | "proposing" | "repairing" | "validating" | "testing" | "dev-check" | "accepted" | "rejected" | "invalid" | "error";
 
 export interface AgentStatus {
+  agentId: string;
   role: RoleId;
+  variant: string;
   label: string;
   phase: AgentPhase;
   candidateId?: string;
@@ -54,6 +56,7 @@ export interface AgentStatus {
 export interface ActivityEvent {
   at: string;
   role?: RoleId;
+  agent?: string;
   text: string;
 }
 
@@ -76,22 +79,25 @@ export class Orchestrator extends EventEmitter {
   progress: { round: number; of: number } | null = null;
   /** True once rounds have been executed in this server process for the loaded experiment. */
   live = false;
-  agents: Record<RoleId, AgentStatus> = Object.fromEntries(
-    ROLES.map((r) => [r.id, { role: r.id, label: r.label, phase: "idle", updatedAt: new Date().toISOString() }]),
-  ) as Record<RoleId, AgentStatus>;
+  readonly team: AgentDef[] = agentDefs(config.experiment.variantsPerRole);
+  agents: Record<string, AgentStatus> = Object.fromEntries(
+    this.team.map((a) => [a.id, { agentId: a.id, role: a.role.id, variant: a.variant.id, label: a.label, phase: "idle", updatedAt: new Date().toISOString() }]),
+  ) as Record<string, AgentStatus>;
   activity: ActivityEvent[] = [];
   private replayCache = new Map<string, Replay>();
 
-  private log(text: string, role?: RoleId) {
-    const ev = { at: new Date().toISOString(), role, text };
+  private log(text: string, agentId?: string) {
+    const a = agentId ? this.agents[agentId] : undefined;
+    const ev: ActivityEvent = { at: new Date().toISOString(), role: a?.role, agent: a ? agentId : undefined, text };
     this.activity.push(ev);
     if (this.activity.length > 200) this.activity.shift();
     this.emit("log", ev);
     this.emit("agents");
   }
 
-  private setAgent(role: RoleId, patch: Partial<AgentStatus>) {
-    this.agents[role] = { ...this.agents[role], ...patch, updatedAt: new Date().toISOString() };
+  private setAgent(agentId: string, patch: Partial<AgentStatus>) {
+    if (!this.agents[agentId]) return;
+    this.agents[agentId] = { ...this.agents[agentId], ...patch, updatedAt: new Date().toISOString() };
     this.emit("agents");
   }
 
@@ -147,7 +153,7 @@ export class Orchestrator extends EventEmitter {
     this.exp = exp;
     this.live = false;
     this.replayCache.clear();
-    for (const r of ROLES) this.setAgent(r.id, { phase: "idle", candidateId: undefined, name: undefined, hypothesis: undefined, message: undefined });
+    for (const a of this.team) this.setAgent(a.id, { phase: "idle", candidateId: undefined, name: undefined, hypothesis: undefined, message: undefined });
     this.log(`Loaded recorded run ${runId}`);
     this.emit("state");
     return true;
@@ -232,7 +238,7 @@ export class Orchestrator extends EventEmitter {
       this.heldOut = null;
       this.live = true;
       this.replayCache.clear();
-      for (const r of ROLES) this.setAgent(r.id, { phase: "idle", candidateId: undefined, name: undefined, hypothesis: undefined, message: undefined });
+      for (const a of this.team) this.setAgent(a.id, { phase: "idle", candidateId: undefined, name: undefined, hypothesis: undefined, message: undefined });
       this.log(`Created experiment ${runId}. Fixed-time dev ${fixed.dev.aggregate.score.toFixed(2)} s/veh, heuristic dev ${heuristic.dev.aggregate.score.toFixed(2)} s/veh; starting champion: ${start.label}`);
     } finally {
       this.busy = null;
@@ -307,15 +313,19 @@ export class Orchestrator extends EventEmitter {
     };
   }
 
-  private async propose(role: RoleDef, round: number, ctx: AgentContext): Promise<CandidateRecord> {
+  private async propose(agent: AgentDef, round: number, ctx: AgentContext): Promise<CandidateRecord> {
     const exp = this.exp!;
-    const id = `r${round}-${role.id}`;
+    const role = agent.role;
+    const aid = agent.id;
+    const id = `r${round}-${agent.id}`;
     const info = this.provider.info();
     const rec: CandidateRecord = {
       id,
       round,
       role: role.id,
-      roleLabel: role.label,
+      agentId: agent.id,
+      variant: agent.variant.id,
+      roleLabel: agent.label,
       provider: info.kind,
       name: "(no proposal)",
       parentId: ctx.championId,
@@ -331,20 +341,20 @@ export class Orchestrator extends EventEmitter {
       decision: [],
       createdAt: new Date().toISOString(),
     };
-    this.setAgent(role.id, { phase: "proposing", candidateId: id, name: undefined, hypothesis: undefined, message: `Calling ${info.label}` });
-    this.log(`Requesting proposal from ${info.label}`, role.id);
-    const messages = buildMessages(role, this.net, ctx);
-    const mockOpts = { mockRole: role.id, mockSeed: hashString(`${exp.runId}:${round}:${role.id}`), mockContext: { championPolicy: ctx.championPolicy, championId: ctx.championId } };
-    const first = await this.provider.complete(messages, { temperature: role.temperature, ...mockOpts });
+    this.setAgent(aid, { phase: "proposing", candidateId: id, name: undefined, hypothesis: undefined, message: `Calling ${info.label}` });
+    this.log(`Requesting proposal from ${info.label}`, aid);
+    const messages = buildMessages(agent, this.net, ctx, this.team.length);
+    const mockOpts = { mockRole: role.id, mockSeed: hashString(`${exp.runId}:${round}:${agent.id}`), mockContext: { championPolicy: ctx.championPolicy, championId: ctx.championId } };
+    const first = await this.provider.complete(messages, { temperature: Math.max(0.1, role.temperature + agent.variant.temperatureDelta), ...mockOpts });
     rec.calls.push(first.call);
     if (first.call.error) {
       rec.status = "provider-error";
       rec.decision = [`provider error: ${first.call.error}`];
-      this.setAgent(role.id, { phase: "error", message: first.call.error });
-      this.log(`Provider error: ${first.call.error}`, role.id);
+      this.setAgent(aid, { phase: "error", message: first.call.error });
+      this.log(`Provider error: ${first.call.error}`, aid);
       return rec;
     }
-    this.setAgent(role.id, { phase: "validating", message: `Response in ${(first.call.latencyMs / 1000).toFixed(1)} s; validating` });
+    this.setAgent(aid, { phase: "validating", message: `Response in ${(first.call.latencyMs / 1000).toFixed(1)} s; validating` });
     let content = first.content;
     let parsed = parseProposal(content);
     let validation = parsed.ok ? validatePolicy(parsed.value.policy, this.net) : null;
@@ -352,14 +362,14 @@ export class Orchestrator extends EventEmitter {
     if (errors.length > 0) {
       rec.validationErrors.push(...errors.map((e) => `attempt 1: ${e}`));
       rec.repairAttempts = 1;
-      this.setAgent(role.id, { phase: "repairing", message: `Invalid (${errors[0]}); requesting one repair` });
-      this.log(`Invalid proposal (${errors.length} issue(s): ${errors[0]}); bounded repair retry`, role.id);
-      const second = await this.provider.complete(repairMessages(messages, content, errors), { temperature: Math.max(0.2, role.temperature - 0.3), ...mockOpts });
+      this.setAgent(aid, { phase: "repairing", message: `Invalid (${errors[0]}); requesting one repair` });
+      this.log(`Invalid proposal (${errors.length} issue(s): ${errors[0]}); bounded repair retry`, aid);
+      const second = await this.provider.complete(repairMessages(messages, content, errors), { temperature: Math.max(0.2, role.temperature + agent.variant.temperatureDelta - 0.3), ...mockOpts });
       rec.calls.push(second.call);
       if (second.call.error) {
         rec.status = "provider-error";
         rec.decision = [`provider error during repair: ${second.call.error}`];
-        this.setAgent(role.id, { phase: "error", message: second.call.error });
+        this.setAgent(aid, { phase: "error", message: second.call.error });
         return rec;
       }
       content = second.content;
@@ -380,15 +390,15 @@ export class Orchestrator extends EventEmitter {
     if (!parsed.ok || !validation?.ok) {
       rec.status = "invalid";
       rec.decision = [`invalid after ${rec.repairAttempts} repair attempt(s): ${errors[0] ?? "unknown"}`];
-      this.setAgent(role.id, { phase: "invalid", name: rec.name, hypothesis: rec.hypothesis, message: errors[0] });
-      this.log(`Rejected as invalid: ${errors[0]}`, role.id);
+      this.setAgent(aid, { phase: "invalid", name: rec.name, hypothesis: rec.hypothesis, message: errors[0] });
+      this.log(`Rejected as invalid: ${errors[0]}`, aid);
       return rec;
     }
     rec.policy = validation.policy!;
     rec.validationWarnings.push(...validation.warnings);
     rec.status = "screened-out"; // provisional until tested
-    this.setAgent(role.id, { phase: "validating", name: rec.name, hypothesis: rec.hypothesis, message: "Valid policy; queued for simulation" });
-    this.log(`Proposed "${rec.name}"`, role.id);
+    this.setAgent(aid, { phase: "validating", name: rec.name, hypothesis: rec.hypothesis, message: "Valid policy; queued for simulation" });
+    this.log(`Proposed "${rec.name}"`, aid);
     return rec;
   }
 
@@ -424,7 +434,7 @@ export class Orchestrator extends EventEmitter {
 
     // 1. Concurrent proposals.
     const ctx = this.buildContext(round);
-    const cands = await Promise.all(ROLES.map((role) => this.propose(role, round, ctx)));
+    const cands = await Promise.all(this.team.map((agent) => this.propose(agent, round, ctx)));
     exp.candidates.push(...cands);
     roundRec.candidateIds = cands.map((c) => c.id);
     this.changed();
@@ -433,10 +443,10 @@ export class Orchestrator extends EventEmitter {
     const champTrain = champ.train.aggregate.score;
     for (const c of cands) {
       if (!c.policy) continue;
-      this.setAgent(c.role, { phase: "testing", message: `Simulating ${this.train.length} training episodes` });
+      this.setAgent(c.agentId ?? c.role, { phase: "testing", message: `Simulating ${this.train.length} training episodes` });
       c.train = await this.evalSuite(c.policy, this.train);
       c.trainVsChampionPct = relImprovement(champTrain, c.train.aggregate.score);
-      this.log(`"${c.name}" training ${c.train.aggregate.score.toFixed(2)} s/veh (${(c.trainVsChampionPct ?? 0).toFixed(1)}% vs champion)`, c.role);
+      this.log(`"${c.name}" training ${c.train.aggregate.score.toFixed(2)} s/veh (${(c.trainVsChampionPct ?? 0).toFixed(1)}% vs champion)`, c.agentId ?? c.role);
       this.changed();
     }
 
@@ -447,20 +457,20 @@ export class Orchestrator extends EventEmitter {
       if (c.train.aggregate.score >= champTrain) {
         c.status = "screened-out";
         c.decision = [`training ${c.train.aggregate.score.toFixed(2)} did not beat champion ${champTrain.toFixed(2)}`];
-        this.setAgent(c.role, { phase: "rejected", message: c.decision[0] });
+        this.setAgent(c.agentId ?? c.role, { phase: "rejected", message: c.decision[0] });
         continue;
       }
-      this.setAgent(c.role, { phase: "dev-check", message: `Training improved ${(c.trainVsChampionPct ?? 0).toFixed(1)}%; checking development suite` });
+      this.setAgent(c.agentId ?? c.role, { phase: "dev-check", message: `Training improved ${(c.trainVsChampionPct ?? 0).toFixed(1)}%; checking development suite` });
       c.dev = await this.evalSuite(c.policy, this.dev);
       const decision = applySelectionRule({ suite: "dev", ...c.dev }, { suite: "dev", ...champ.dev });
       const cmp = decision.comparison;
       c.devComparison = { relImprovement: cmp.relImprovement, wins: cmp.wins, losses: cmp.losses, ties: cmp.ties, meanRel: cmp.meanRel, sdRel: cmp.sdRel };
       c.decision = decision.reasons;
-      this.log(`"${c.name}" development ${c.dev.aggregate.score.toFixed(2)} s/veh: ${decision.accept ? "passes the selection rule" : `rejected (${decision.reasons.join("; ")})`}`, c.role);
+      this.log(`"${c.name}" development ${c.dev.aggregate.score.toFixed(2)} s/veh: ${decision.accept ? "passes the selection rule" : `rejected (${decision.reasons.join("; ")})`}`, c.agentId ?? c.role);
       if (decision.accept) passed.push(c);
       else {
         c.status = "rejected";
-        this.setAgent(c.role, { phase: "rejected", message: `Dev rule failed: ${decision.reasons[0]}` });
+        this.setAgent(c.agentId ?? c.role, { phase: "rejected", message: `Dev rule failed: ${decision.reasons[0]}` });
       }
       this.changed();
     }
@@ -469,7 +479,7 @@ export class Orchestrator extends EventEmitter {
     for (const c of passed.slice(1)) {
       c.status = "rejected";
       c.decision = [...c.decision, `passed the rule, but ${winner.id} scored better on development`];
-      this.setAgent(c.role, { phase: "rejected", message: "Passed, but another candidate was better on dev" });
+      this.setAgent(c.agentId ?? c.role, { phase: "rejected", message: "Passed, but another candidate was better on dev" });
     }
     if (winner) {
       winner.status = "accepted";
@@ -483,8 +493,8 @@ export class Orchestrator extends EventEmitter {
         at: new Date().toISOString(),
         reason: winner.decision[0],
       });
-      this.setAgent(winner.role, { phase: "accepted", message: `New champion: ${winner.decision[0]}` });
-      this.log(`New champion "${winner.name}" (dev ${winner.dev!.aggregate.score.toFixed(2)} s/veh)`, winner.role);
+      this.setAgent(winner.agentId ?? winner.role, { phase: "accepted", message: `New champion: ${winner.decision[0]}` });
+      this.log(`New champion "${winner.name}" (dev ${winner.dev!.aggregate.score.toFixed(2)} s/veh)`, winner.agentId ?? winner.role);
     } else {
       this.log(`Round ${round}: champion retained`);
     }

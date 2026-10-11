@@ -2,31 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getNetwork } from "../../../sim/network";
 import type { Replay } from "../api";
 import { fmt } from "../api";
-import { drawFrame, fitTransform, FrameIndex } from "../render/mapRenderer";
+import { liveAt } from "../derive";
+import { drawFrame, fitTransform, FrameIndex, type MapPalette } from "../render/mapRenderer";
+import type { ControllerOption } from "../useGreenwave";
 
 const net = getNetwork();
 
-export interface ControllerOption {
-  id: string;
-  label: string;
-}
-
-interface Props {
-  side: "left" | "right";
-  title: string;
-  replay: Replay | null;
-  loading: boolean;
-  error: string | null;
-  t: number;
-  heat: boolean;
-  controllerId: string;
-  options: ControllerOption[];
-  onController: (id: string) => void;
-  /** Suite-level benchmark score for this controller on the scenario's suite, if known. */
-  accent: string;
-}
-
-export function MapPanel({ side, title, replay, loading, error, t, heat, controllerId, options, onController, accent }: Props) {
+/** Canvas that draws recorded frames at time t. */
+export function MapCanvas({ replay, t, heat, palette, label, error, loading }: { replay: Replay | null; t: number; heat: boolean; palette: MapPalette; label: string; error?: string | null; loading?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
@@ -37,7 +20,7 @@ export function MapPanel({ side, title, replay, loading, error, t, heat, control
     if (!el) return;
     const ro = new ResizeObserver(() => {
       const r = el.getBoundingClientRect();
-      setSize({ w: Math.max(200, Math.floor(r.width)), h: Math.max(200, Math.floor(r.height)) });
+      setSize({ w: Math.max(200, Math.floor(r.width)), h: Math.max(160, Math.floor(r.height)) });
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -56,19 +39,43 @@ export function MapPanel({ side, title, replay, loading, error, t, heat, control
     }
     const ctx = canvas.getContext("2d")!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawFrame(ctx, net, fitTransform(net, w, h), w, h, replay, index, t, { heat, label: title });
+    drawFrame(ctx, net, fitTransform(net, w, h), w, h, replay, index, t, { heat, label, palette });
   });
 
-  const frame = replay ? replay.frames[Math.max(0, Math.min(replay.frames.length - 1, Math.floor(t / replay.frameEvery)))] : null;
-  const live = frame ? { stopped: frame.m[0], released: frame.m[1], completed: frame.m[2], waiting: frame.m[3], p95: frame.m[4] } : null;
-  const done = replay && t >= replay.horizon + replay.drain - 1e-6;
-
   return (
-    <section className={`map-panel ${side}`}>
-      <header className="map-head" style={{ borderColor: accent }}>
+    <div className="canvas-wrap" ref={wrapRef}>
+      <canvas ref={canvasRef} role="img" aria-label={`${label}: recorded simulation replay of the simplified State College network`} />
+      {error && <div className="canvas-msg error">{error}</div>}
+      {!error && loading && !replay && <div className="canvas-msg">Simulating replay…</div>}
+    </div>
+  );
+}
+
+interface Props {
+  side: "left" | "right";
+  tag: string;
+  replay: Replay | null;
+  loading: boolean;
+  error: string | null;
+  t: number;
+  heat: boolean;
+  palette: MapPalette;
+  controllerId: string;
+  options: ControllerOption[];
+  onController: (id: string) => void;
+  caption?: string;
+  /** Hide the live metric grid (e.g. when a layout shows a shared scoreboard instead). */
+  bare?: boolean;
+}
+
+export function MapPanel({ side, tag, replay, loading, error, t, heat, palette, controllerId, options, onController, caption, bare }: Props) {
+  const live = liveAt(replay, t);
+  return (
+    <section className={`map-panel ${side}`} aria-label={tag}>
+      <header className="map-head">
         <div className="map-title">
-          <span className="side-tag" style={{ background: accent }}>{side === "left" ? "BASELINE" : "CANDIDATE"}</span>
-          <select value={controllerId} onChange={(e) => onController(e.target.value)}>
+          <h2 className={`label ${side === "right" ? "champ" : ""}`}>{tag}</h2>
+          <select aria-label={`${tag} controller`} value={controllerId} onChange={(e) => onController(e.target.value)}>
             {options.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.label}
@@ -76,41 +83,39 @@ export function MapPanel({ side, title, replay, loading, error, t, heat, control
             ))}
           </select>
         </div>
-        {loading && <span className="muted small">simulating replay…</span>}
+        <span className="hint">{loading ? "simulating replay…" : caption ?? "synchronized · same synthetic traffic"}</span>
       </header>
-      <div className="canvas-wrap" ref={wrapRef}>
-        <canvas ref={canvasRef} />
-        {error && <div className="canvas-msg error">{error}</div>}
-      </div>
-      <div className="metric-strip">
-        <div className="metric-group">
-          <div className="metric-caption">{done ? "Episode complete" : `Live · partial episode at t = ${Math.floor(t)} s`}</div>
-          <div className="metrics">
-            <Metric label="Stopped time / scheduled veh" value={live && replay ? fmt.s(live.stopped / replay.scheduled, 1) + " s" : "–"} hint="cumulative so far ÷ all vehicles scheduled in this episode" />
-            <Metric label="Completed trips" value={live && replay ? `${live.completed} / ${replay.scheduled}` : "–"} />
-            <Metric label="Waiting / queued now" value={live ? String(live.waiting) : "–"} hint="stopped in network + external entry queues" />
-            <Metric label="P95 observed wait" value={live ? fmt.s(live.p95, 0) + " s" : "–"} hint="over released vehicles, including unfinished" />
+      <MapCanvas replay={replay} t={t} heat={heat} palette={palette} label={tag} error={error} loading={loading} />
+      {!bare && (
+        <>
+          <div className="metric-grid">
+            <div>
+              <div className="metric-l">Stopped time per scheduled vehicle</div>
+              <div className="metric-v">{live ? `${fmt.s(live.stoppedPerVeh, 1)} s` : "–"}</div>
+            </div>
+            <div>
+              <div className="metric-l">Trips completed</div>
+              <div className="metric-v">{live ? `${live.completed} / ${live.scheduled}` : "–"}</div>
+            </div>
+            <div>
+              <div className="metric-l">Waiting now</div>
+              <div className="metric-v">{live ? live.waiting : "–"}</div>
+            </div>
+            <div>
+              <div className="metric-l">P95 wait</div>
+              <div className="metric-v">{live ? `${fmt.s(live.p95, 0)} s` : "–"}</div>
+            </div>
           </div>
-        </div>
-        <div className="metric-group final">
-          <div className="metric-caption">Episode final (same simulation run)</div>
-          <div className="metrics">
-            <Metric label="Score" value={replay ? fmt.s(replay.final.score) + " s/veh" : "–"} strong />
-            <Metric label="Completion" value={replay ? (replay.final.completionFraction * 100).toFixed(1) + "%" : "–"} />
-            <Metric label="Backlog at end" value={replay ? String(replay.final.inNetwork + replay.final.externalBacklog) : "–"} />
-            <Metric label="P95 wait" value={replay ? fmt.s(replay.final.p95Wait, 0) + " s" : "–"} />
+          <div className="metric-foot">
+            <span>{live?.done ? "Episode complete" : `Live · partial episode at t = ${Math.floor(t)} s`}</span>
+            {replay && (
+              <span>
+                Episode final: <b>{fmt.s(replay.final.score)} s/veh</b> · completion <b>{(replay.final.completionFraction * 100).toFixed(1)}%</b> · unfinished <b>{replay.final.inNetwork + replay.final.externalBacklog}</b>
+              </span>
+            )}
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </section>
-  );
-}
-
-function Metric({ label, value, hint, strong }: { label: string; value: string; hint?: string; strong?: boolean }) {
-  return (
-    <div className="metric" title={hint}>
-      <div className={`metric-value ${strong ? "strong" : ""}`}>{value}</div>
-      <div className="metric-label">{label}</div>
-    </div>
   );
 }

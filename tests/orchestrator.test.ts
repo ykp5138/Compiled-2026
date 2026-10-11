@@ -48,7 +48,8 @@ describe("orchestrator", () => {
     const before = orch.exp!.championId;
     await orch.runRounds(1);
     const cands = orch.exp!.candidates.filter((c) => c.round === 1);
-    expect(cands).toHaveLength(3);
+    expect(cands).toHaveLength(orch.team.length);
+    expect(new Set(cands.map((c) => c.agentId)).size).toBe(orch.team.length);
     expect(cands.every((c) => c.status === "invalid" || c.status === "provider-error")).toBe(true);
     expect(cands.some((c) => c.status === "provider-error")).toBe(true);
     expect(cands.filter((c) => c.status === "invalid").every((c) => c.repairAttempts === 1 && c.validationErrors.length > 0)).toBe(true);

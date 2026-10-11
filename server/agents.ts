@@ -17,24 +17,70 @@ export const ROLES: RoleDef[] = [
     id: "corridor",
     label: "Corridor Coordinator",
     focus:
-      "green splits, offsets and coordinated progression along College Ave (westbound: C_PUG -> C_ALL -> C_ATH) and Beaver Ave (eastbound: B_ATH -> B_ALL -> B_PUG). Consider coordination windows, common cycles and platoon travel times.",
+      "green splits, offsets and coordinated progression along College Ave (westbound: C_PUG -> C_ALL -> C_ATH) and Beaver Ave (eastbound: B_ATH -> B_ALL -> B_PUG). Your levers: coordination windows (cycle, offsets, lengths, bonuses), fixed-time plans (cycle, splits, offsets) and each intersection's mode. Leave queue weights to the Queue Optimizer.",
     temperature: 0.7,
   },
   {
     id: "queue",
     label: "Queue Optimizer",
     focus:
-      "queue-responsive service, downstream (receiving-link) capacity and avoiding spillback. Tune adaptive weights, hold times and hysteresis so green goes where it discharges the most vehicles.",
+      "queue-responsive service, downstream (receiving-link) capacity and avoiding spillback. Your levers: adaptive weights (queue, approaching, downstream), minHold and hysteresis. Leave coordination windows to the Corridor Coordinator.",
     temperature: 0.7,
   },
   {
     id: "robustness",
     label: "Robustness Optimizer",
     focus:
-      "side-street starvation (Allen, Pugh), tail waiting times (P95/max) and robustness to changing or bursty demand. Avoid gains that come from starving any approach.",
+      "side-street starvation (Allen, Pugh), tail waiting times (P95/max) and robustness to changing or bursty demand. Your levers: per-phase maxGreen, the oldestWait weight and phaseBias. Avoid gains that come from starving any approach.",
     temperature: 0.8,
   },
 ];
+
+export type VariantId = "refine" | "explore";
+
+export interface VariantDef {
+  id: VariantId;
+  label: string;
+  instruction: string;
+  temperatureDelta: number;
+}
+
+export const VARIANTS: VariantDef[] = [
+  {
+    id: "refine",
+    label: "refine",
+    instruction:
+      "STRATEGY: REFINE. Make a careful, incremental improvement to the current champion within your levers (a few targeted parameter changes at the intersections where the bottleneck data shows the most stopped time). Build on what has already worked.",
+    temperatureDelta: -0.2,
+  },
+  {
+    id: "explore",
+    label: "explore",
+    instruction:
+      "STRATEGY: EXPLORE. Try a bolder, structurally different idea within your levers than the champion and recent candidates use (for example a different mode, a different coordination pattern, or a substantially different weighting). Do not just nudge numbers; test a new hypothesis.",
+    temperatureDelta: 0.15,
+  },
+];
+
+export interface AgentDef {
+  /** e.g. "corridor-refine" */
+  id: string;
+  role: RoleDef;
+  variant: VariantDef;
+  label: string;
+}
+
+export function agentDefs(variantsPerRole: number): AgentDef[] {
+  const vs = VARIANTS.slice(0, Math.max(1, Math.min(VARIANTS.length, variantsPerRole)));
+  return ROLES.flatMap((role) =>
+    vs.map((variant) => ({
+      id: vs.length > 1 ? `${role.id}-${variant.id}` : role.id,
+      role,
+      variant,
+      label: vs.length > 1 ? `${role.label} · ${variant.label}` : role.label,
+    })),
+  );
+}
 
 export interface CandidateSummaryForAgents {
   id: string;
@@ -92,11 +138,13 @@ export function describeNetwork(net: Network): string {
   return lines.join("\n");
 }
 
-export function buildMessages(role: RoleDef, net: Network, ctx: AgentContext): ChatMessage[] {
+export function buildMessages(agent: AgentDef, net: Network, ctx: AgentContext, teamSize: number): ChatMessage[] {
+  const role = agent.role;
   const system = [
-    `You are the ${role.label}, one of three AI agents working in parallel to improve traffic-signal control policies for a simplified, SYNTHETIC simulation of downtown State College, PA.`,
+    `You are the ${role.label} (${agent.variant.label} variant), one of ${teamSize} AI agents working in parallel to improve traffic-signal control policies for a simplified, SYNTHETIC simulation of downtown State College, PA.`,
     `Your focus: ${role.focus}`,
-    "Each round, every agent proposes one competing policy. An ordinary program validates it, simulates it on fixed training scenarios, and checks promising ones on a separate development suite with a predefined selection rule. Unseen held-out tests are run only at the very end.",
+    agent.variant.instruction,
+    "Each round, every agent (three roles, each with a refine and an explore variant when the team has six members) proposes one competing policy. An ordinary program validates it, simulates it on fixed training scenarios, and checks promising ones on a separate development suite with a predefined selection rule. Unseen held-out tests are run only at the very end.",
     "Primary score (lower is better): total stopped vehicle-seconds (inside the network AND in external entry queues) divided by scheduled vehicles. Gains that sacrifice trip completion, side-street P95 wait or overall P95 wait are rejected.",
     "Controllers only see present detector aggregates (queues, approaching vehicles, oldest wait, downstream occupancy, time since green). They never see future arrivals.",
     "Make a focused, testable change with a clear hypothesis. Learn from previous results: do not repeat failed ideas.",

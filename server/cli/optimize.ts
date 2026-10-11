@@ -4,8 +4,8 @@ import { config } from "../config";
 import { Orchestrator } from "../orchestrator";
 
 const orch = new Orchestrator();
-orch.on("log", (e: { at: string; role?: string; text: string }) => {
-  console.log(`[${e.at.slice(11, 19)}]${e.role ? ` ${e.role.padEnd(10)}` : " "} ${e.text}`);
+orch.on("log", (e: { at: string; role?: string; agent?: string; text: string }) => {
+  console.log(`[${e.at.slice(11, 19)}]${e.agent ?? e.role ? ` ${(e.agent ?? e.role)!.padEnd(19)}` : " "} ${e.text}`);
 });
 const runId = arg("run");
 if (flag("new")) await orch.createExperiment();

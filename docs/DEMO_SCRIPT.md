@@ -54,3 +54,68 @@ Rounds 1, 3 and 4 kept the champion. Several candidates improved training but fa
 - Heuristic vs fixed-time: +14.0%, 8 wins / 4 losses.
 
 Honest caveats: the network is simplified and the traffic is synthetic. The side-street P95 is essentially unchanged vs the heuristic (124 s vs 123 s). The champion loses to fixed-time on 2 of 12 episodes.
+
+### Run `run-20261011-164124`: 6 parallel agents (3 roles × refine/explore), 6 rounds. This is the main demo run.
+
+| Stage | Champion | Agent | Training | Development |
+|---|---|---|---|---|
+| Start | Queue-responsive heuristic (baseline) | – | 35.81 | 34.08 |
+| Round 1 | "coord-arterial-wave" | Corridor · refine | 35.22 | 33.70 |
+| Round 3 | "platoon-anticipation-approach-1p5" | Queue · explore | 33.40 | 31.33 |
+| Round 4 | "platoon-hold-tuned-2.5" | Robustness · explore | 31.22 | 29.27 |
+| Round 5 | "atherton-two-way-align-college-band" | Corridor · refine | 31.12 | 28.66 |
+
+Of the 36 candidates, 4 were accepted, 11 were rejected by the development rule, 20 were screened out on training, and 1 was invalid.
+
+- **Feedback quote for the demo:** the round 4 winner's hypothesis begins "The champion's platoon-anticipation gain (approaching=1.5) is still leaving platoon tails unconverted…", building directly on the round 3 winner.
+- **Parallelism:** 41 model calls took 22m26s of wall-clock time versus 71m49s sequentially, so it was **3.2× faster**.
+
+**Held-out (new suite of 12 unseen episodes, champion frozen first):**
+
+| Controller | Score | ± sd | Completion | P95 wait | Side-street P95 | Unfinished |
+|---|---|---|---|---|---|---|
+| Fixed-time | 36.40 | 12.10 | 99.6% | 112 s | 134 s | 79 |
+| Heuristic | 31.80 | 7.22 | 100.0% | 74 s | 107 s | 0 |
+| Champion | 28.24 | 6.28 | 100.0% | 71 s | 101 s | 0 |
+
+- Champion vs heuristic: **+11.2%**, 12 wins / 0 losses (per-episode +1.5% … +20.8%).
+- Champion vs fixed-time: **+22.4%**, 10 wins / 2 losses (per-episode −6.1% … +46.8%).
+- Heuristic vs fixed-time: +12.6%, 8 wins / 4 losses.
+
+**3 vs 6 agents:**
+
+| | 3 agents | 6 agents |
+|---|---|---|
+| First champion | round 2 | round 1 |
+| Champions found | 2 | 4 |
+| Development score | 30.57 | 28.66 |
+| Parallel speedup | 1.8× | 3.2× |
+| Held-out vs heuristic | +10.9% | +11.2% |
+
+**Caveat to say aloud:** the larger development gain only partly carried over to unseen traffic, which is why the held-out suite is the number we report. Each run has its own held-out suite, so compare percentages, not raw scores, across runs.
+
+## Control experiment: do the LLM agents matter? (`npm run ablation -- --run run-20261011-164124`)
+
+This uses the same loop and the same budget (6 proposers × 6 rounds = 36 candidates), with the same scenarios, selection rule, and the **same 12 held-out episodes**. The only difference is the proposer: random perturbations of the champion instead of LLM agents. Results are in `experiments/ablations/ablation-run-20261011-164124.json`.
+
+| Proposer | Held-out s/veh | vs heuristic | Wins / losses vs heuristic |
+|---|---|---|---|
+| Heuristic baseline | 31.80 | – | – |
+| Random search, seed 0 | 30.95 | +2.7% | 7 / 5 |
+| Random search, seed 1 | 30.01 | +5.6% | 9 / 3 |
+| Random search, seed 2 | 30.30 | +4.7% | 10 / 2 |
+| **LLM agents (DeepSeek on Luminal)** | **28.24** | **+11.2%** | **12 / 0 (sign test p = 0.0005)** |
+
+On the same budget, the LLM agents gain about 2.6× more than random search (+11.2% vs a mean of +4.3%). Head to head on paired held-out episodes, the LLM champion beats each random-search champion by 8.8%, 5.9% and 6.8%, winning 11/12, 10/12 and 9/12 episodes (sign-test p = 0.006, 0.039 and 0.15).
+
+### What the champion changed (vs the heuristic it started from)
+
+- **Platoon anticipation:** the weight on moving vehicles approaching a green rose from 0.8 to **2.5 at both Atherton intersections** and to **1.8 elsewhere**. Green is held for arriving platoons instead of being cut as soon as the standing queue clears.
+- **Coordinated green waves:** a 95 s coordination cycle with avenue-phase windows. College Ave runs westbound with offsets C_PUG 45 s → C_ALL 59 s → C_ATH 0 s; Beaver Ave runs eastbound with offsets B_ATH 0 s → B_ALL 36 s → B_PUG 50 s.
+- **Rebalanced max greens:**
+  - Atherton cross-street phase: 35 → 40 s (College & Atherton) and 35 → 45 s (Beaver & Atherton).
+  - Beaver Ave phase capped lower: 50 → 45 s at Atherton and 50 → 40 s at Allen and Pugh.
+  - Allen and Pugh cross phases: 35 → 45 s.
+- **Fairness:** the oldest-wait weight rose from 0.04 to 0.06 everywhere. Side-street P95 improved from 107 s to 101 s.
+
+Each change traces to an accepted proposal in the lineage: corridor green wave (R1), then platoon anticipation (R3), then more platoon weight at Atherton (R4), then Atherton alignment (R5).

@@ -15,7 +15,8 @@
     "check:luminal": "tsx server/cli/check.ts",
     "bench": "tsx server/cli/bench.ts",
     "optimize": "tsx server/cli/optimize.ts",
-    "final": "tsx server/cli/final.ts"
+    "final": "tsx server/cli/final.ts",
+    "ablation": "tsx server/cli/ablation.ts"
   },
   "dependencies": {
     "react": "^18.3.1",
