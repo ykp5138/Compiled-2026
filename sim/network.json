@@ -1,0 +1,163 @@
+{
+  "name": "Simplified downtown State College",
+  "disclaimer": "Simplified State College network · synthetic traffic",
+  "notes": [
+    "Schematic, axis-aligned geometry in metres (x = east, y = south). The real downtown grid is rotated roughly 45 degrees; it is drawn north-up here.",
+    "College Ave is modeled one-way westbound and Beaver Ave one-way eastbound (see https://ecode360.com/32902839).",
+    "Intermediate streets (Burrowes, Fraser, Garner, ...) are intentionally omitted; block lengths are approximate.",
+    "Allen St and Pugh St end at College Ave (campus side is not a vehicle road in this model).",
+    "Signal timings, lane assignments and turn permissions are simulation assumptions, not municipal timing plans."
+  ],
+  "laneWidth": 3.5,
+  "intersectionInset": 14,
+  "nodes": [
+    { "id": "C_ATH", "kind": "signal", "x": 0,   "y": 0,   "name": "College Ave & Atherton St" },
+    { "id": "C_ALL", "kind": "signal", "x": 400, "y": 0,   "name": "College Ave & Allen St" },
+    { "id": "C_PUG", "kind": "signal", "x": 560, "y": 0,   "name": "College Ave & Pugh St" },
+    { "id": "B_ATH", "kind": "signal", "x": 0,   "y": 140, "name": "Beaver Ave & Atherton St" },
+    { "id": "B_ALL", "kind": "signal", "x": 400, "y": 140, "name": "Beaver Ave & Allen St" },
+    { "id": "B_PUG", "kind": "signal", "x": 560, "y": 140, "name": "Beaver Ave & Pugh St" },
+    { "id": "BD_CE", "kind": "boundary", "x": 780,  "y": 0 },
+    { "id": "BD_CW", "kind": "boundary", "x": -220, "y": 0 },
+    { "id": "BD_BW", "kind": "boundary", "x": -220, "y": 140 },
+    { "id": "BD_BE", "kind": "boundary", "x": 780,  "y": 140 },
+    { "id": "BD_AN", "kind": "boundary", "x": 0,    "y": -210 },
+    { "id": "BD_AS", "kind": "boundary", "x": 0,    "y": 360 },
+    { "id": "BD_LS", "kind": "boundary", "x": 400,  "y": 360 },
+    { "id": "BD_PS", "kind": "boundary", "x": 560,  "y": 360 }
+  ],
+  "links": [
+    { "id": "col_in_e",    "from": "BD_CE", "to": "C_PUG", "street": "College Ave", "dir": "WB", "lanes": 2, "speed": 11.2 },
+    { "id": "col_pug_all", "from": "C_PUG", "to": "C_ALL", "street": "College Ave", "dir": "WB", "lanes": 2, "speed": 11.2 },
+    { "id": "col_all_ath", "from": "C_ALL", "to": "C_ATH", "street": "College Ave", "dir": "WB", "lanes": 2, "speed": 11.2 },
+    { "id": "col_out_w",   "from": "C_ATH", "to": "BD_CW", "street": "College Ave", "dir": "WB", "lanes": 2, "speed": 11.2 },
+
+    { "id": "bea_in_w",    "from": "BD_BW", "to": "B_ATH", "street": "Beaver Ave", "dir": "EB", "lanes": 2, "speed": 11.2 },
+    { "id": "bea_ath_all", "from": "B_ATH", "to": "B_ALL", "street": "Beaver Ave", "dir": "EB", "lanes": 2, "speed": 11.2 },
+    { "id": "bea_all_pug", "from": "B_ALL", "to": "B_PUG", "street": "Beaver Ave", "dir": "EB", "lanes": 2, "speed": 11.2 },
+    { "id": "bea_out_e",   "from": "B_PUG", "to": "BD_BE", "street": "Beaver Ave", "dir": "EB", "lanes": 2, "speed": 11.2 },
+
+    { "id": "ath_in_n",  "from": "BD_AN", "to": "C_ATH", "street": "Atherton St", "dir": "SB", "lanes": 2, "speed": 13.4 },
+    { "id": "ath_c_b",   "from": "C_ATH", "to": "B_ATH", "street": "Atherton St", "dir": "SB", "lanes": 2, "speed": 13.4 },
+    { "id": "ath_out_s", "from": "B_ATH", "to": "BD_AS", "street": "Atherton St", "dir": "SB", "lanes": 2, "speed": 13.4 },
+    { "id": "ath_in_s",  "from": "BD_AS", "to": "B_ATH", "street": "Atherton St", "dir": "NB", "lanes": 2, "speed": 13.4 },
+    { "id": "ath_b_c",   "from": "B_ATH", "to": "C_ATH", "street": "Atherton St", "dir": "NB", "lanes": 2, "speed": 13.4 },
+    { "id": "ath_out_n", "from": "C_ATH", "to": "BD_AN", "street": "Atherton St", "dir": "NB", "lanes": 2, "speed": 13.4 },
+
+    { "id": "all_in_s",  "from": "BD_LS", "to": "B_ALL", "street": "Allen St", "dir": "NB", "lanes": 1, "speed": 8.9 },
+    { "id": "all_b_c",   "from": "B_ALL", "to": "C_ALL", "street": "Allen St", "dir": "NB", "lanes": 1, "speed": 8.9 },
+    { "id": "all_c_b",   "from": "C_ALL", "to": "B_ALL", "street": "Allen St", "dir": "SB", "lanes": 1, "speed": 8.9 },
+    { "id": "all_out_s", "from": "B_ALL", "to": "BD_LS", "street": "Allen St", "dir": "SB", "lanes": 1, "speed": 8.9 },
+
+    { "id": "pug_in_s",  "from": "BD_PS", "to": "B_PUG", "street": "Pugh St", "dir": "NB", "lanes": 1, "speed": 8.9 },
+    { "id": "pug_b_c",   "from": "B_PUG", "to": "C_PUG", "street": "Pugh St", "dir": "NB", "lanes": 1, "speed": 8.9 },
+    { "id": "pug_c_b",   "from": "C_PUG", "to": "B_PUG", "street": "Pugh St", "dir": "SB", "lanes": 1, "speed": 8.9 },
+    { "id": "pug_out_s", "from": "B_PUG", "to": "BD_PS", "street": "Pugh St", "dir": "SB", "lanes": 1, "speed": 8.9 }
+  ],
+  "intersections": [
+    {
+      "id": "C_ATH",
+      "movements": [
+        ["col_all_ath", "col_out_w", "T"], ["col_all_ath", "ath_c_b", "L"], ["col_all_ath", "ath_out_n", "R"],
+        ["ath_in_n", "ath_c_b", "T"], ["ath_in_n", "col_out_w", "R"],
+        ["ath_b_c", "ath_out_n", "T"]
+      ],
+      "phases": [
+        { "name": "College WB", "movements": ["col_all_ath>col_out_w", "col_all_ath>ath_c_b", "col_all_ath>ath_out_n"] },
+        { "name": "Atherton NB/SB", "movements": ["ath_in_n>ath_c_b", "ath_in_n>col_out_w", "ath_b_c>ath_out_n"] }
+      ]
+    },
+    {
+      "id": "C_ALL",
+      "movements": [
+        ["col_pug_all", "col_all_ath", "T"], ["col_pug_all", "all_c_b", "L"],
+        ["all_b_c", "col_all_ath", "L"]
+      ],
+      "phases": [
+        { "name": "College WB", "movements": ["col_pug_all>col_all_ath", "col_pug_all>all_c_b"] },
+        { "name": "Allen NB", "movements": ["all_b_c>col_all_ath"] }
+      ]
+    },
+    {
+      "id": "C_PUG",
+      "movements": [
+        ["col_in_e", "col_pug_all", "T"], ["col_in_e", "pug_c_b", "L"],
+        ["pug_b_c", "col_pug_all", "L"]
+      ],
+      "phases": [
+        { "name": "College WB", "movements": ["col_in_e>col_pug_all", "col_in_e>pug_c_b"] },
+        { "name": "Pugh NB", "movements": ["pug_b_c>col_pug_all"] }
+      ]
+    },
+    {
+      "id": "B_ATH",
+      "movements": [
+        ["bea_in_w", "bea_ath_all", "T"], ["bea_in_w", "ath_b_c", "L"], ["bea_in_w", "ath_out_s", "R"],
+        ["ath_c_b", "ath_out_s", "T"],
+        ["ath_in_s", "ath_b_c", "T"], ["ath_in_s", "bea_ath_all", "R"]
+      ],
+      "phases": [
+        { "name": "Beaver EB", "movements": ["bea_in_w>bea_ath_all", "bea_in_w>ath_b_c", "bea_in_w>ath_out_s"] },
+        { "name": "Atherton NB/SB", "movements": ["ath_c_b>ath_out_s", "ath_in_s>ath_b_c", "ath_in_s>bea_ath_all"] }
+      ]
+    },
+    {
+      "id": "B_ALL",
+      "movements": [
+        ["bea_ath_all", "bea_all_pug", "T"], ["bea_ath_all", "all_b_c", "L"], ["bea_ath_all", "all_out_s", "R"],
+        ["all_c_b", "all_out_s", "T"],
+        ["all_in_s", "all_b_c", "T"], ["all_in_s", "bea_all_pug", "R"]
+      ],
+      "phases": [
+        { "name": "Beaver EB", "movements": ["bea_ath_all>bea_all_pug", "bea_ath_all>all_b_c", "bea_ath_all>all_out_s"] },
+        { "name": "Allen NB/SB", "movements": ["all_c_b>all_out_s", "all_in_s>all_b_c", "all_in_s>bea_all_pug"] }
+      ]
+    },
+    {
+      "id": "B_PUG",
+      "movements": [
+        ["bea_all_pug", "bea_out_e", "T"], ["bea_all_pug", "pug_b_c", "L"], ["bea_all_pug", "pug_out_s", "R"],
+        ["pug_c_b", "pug_out_s", "T"],
+        ["pug_in_s", "pug_b_c", "T"], ["pug_in_s", "bea_out_e", "R"]
+      ],
+      "phases": [
+        { "name": "Beaver EB", "movements": ["bea_all_pug>bea_out_e", "bea_all_pug>pug_b_c", "bea_all_pug>pug_out_s"] },
+        { "name": "Pugh NB/SB", "movements": ["pug_c_b>pug_out_s", "pug_in_s>pug_b_c", "pug_in_s>bea_out_e"] }
+      ]
+    }
+  ],
+  "demand": {
+    "baseVehPerHour": {
+      "col_in_e": 1550,
+      "bea_in_w": 1550,
+      "ath_in_n": 1200,
+      "ath_in_s": 1200,
+      "all_in_s": 360,
+      "pug_in_s": 300
+    },
+    "sideStreetOrigins": ["all_in_s", "pug_in_s"],
+    "arterialOrigins": ["col_in_e", "bea_in_w"],
+    "crossArterialOrigins": ["ath_in_n", "ath_in_s"],
+    "destinationShares": {
+      "col_in_e": { "col_out_w": 0.55, "ath_out_n": 0.12, "ath_out_s": 0.13, "all_out_s": 0.10, "pug_out_s": 0.10 },
+      "bea_in_w": { "bea_out_e": 0.55, "ath_out_n": 0.12, "ath_out_s": 0.12, "all_out_s": 0.11, "pug_out_s": 0.10 },
+      "ath_in_n": { "ath_out_s": 0.70, "col_out_w": 0.30 },
+      "ath_in_s": { "ath_out_n": 0.60, "bea_out_e": 0.20, "all_out_s": 0.10, "pug_out_s": 0.10 },
+      "all_in_s": { "col_out_w": 0.35, "ath_out_n": 0.15, "ath_out_s": 0.10, "bea_out_e": 0.30, "pug_out_s": 0.10 },
+      "pug_in_s": { "col_out_w": 0.40, "bea_out_e": 0.30, "all_out_s": 0.10, "ath_out_n": 0.10, "ath_out_s": 0.10 }
+    }
+  },
+  "map": {
+    "bounds": { "minX": -232, "minY": -222, "maxX": 792, "maxY": 372 },
+    "campus": { "x0": 40, "y0": -205, "x1": 790, "y1": -30, "label": "Penn State · University Park campus" },
+    "landmarks": [ { "label": "Old Main", "x": 400, "y": -120, "w": 70, "h": 34 } ],
+    "downtownLabel": { "text": "Downtown State College", "x": 290, "y": 300 },
+    "streetLabels": [
+      { "text": "College Ave  ← westbound", "x": 200, "y": -20, "angle": 0 },
+      { "text": "Beaver Ave  eastbound →", "x": 200, "y": 166, "angle": 0 },
+      { "text": "Atherton St", "x": -28, "y": -130, "angle": -90 },
+      { "text": "Allen St", "x": 378, "y": 280, "angle": -90 },
+      { "text": "Pugh St", "x": 538, "y": 280, "angle": -90 }
+    ]
+  }
+}

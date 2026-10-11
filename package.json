@@ -1,0 +1,35 @@
+{
+  "name": "greenwave-state-college",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-improving AI agent team that optimizes traffic-signal policies on a simplified downtown State College network.",
+  "scripts": {
+    "dev": "concurrently -k -n server,web -c cyan,magenta \"npm:server\" \"npm:web\"",
+    "server": "tsx watch --clear-screen=false server/server.ts",
+    "web": "vite",
+    "build": "vite build",
+    "start": "tsx server/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check:luminal": "tsx server/cli/check.ts",
+    "bench": "tsx server/cli/bench.ts",
+    "optimize": "tsx server/cli/optimize.ts",
+    "final": "tsx server/cli/final.ts"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}
