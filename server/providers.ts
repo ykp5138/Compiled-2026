@@ -10,6 +10,8 @@ export interface ChatMessage {
 
 export interface CallRecord {
   provider: "luminal" | "mock";
+  /** ISO time the call started (used for the parallel-agent timeline). */
+  startedAt?: string;
   model: string;
   latencyMs: number;
   attempts: number;
@@ -98,6 +100,7 @@ export class LuminalProvider implements AgentProvider {
   async complete(messages: ChatMessage[], opts: { temperature: number }): Promise<CompletionResult> {
     return this.sem.run(async () => {
       const t0 = Date.now();
+      const startedAt = new Date(t0).toISOString();
       let attempts = 0;
       let lastErr = "";
       while (attempts < config.luminal.maxRetries) {
@@ -186,6 +189,7 @@ export class LuminalProvider implements AgentProvider {
             content,
             call: {
               provider: "luminal",
+              startedAt,
               model: config.luminal.model,
               latencyMs: Date.now() - t0,
               attempts,
@@ -204,6 +208,7 @@ export class LuminalProvider implements AgentProvider {
         content: "",
         call: {
           provider: "luminal",
+          startedAt,
           model: config.luminal.model,
           latencyMs: Date.now() - t0,
           attempts,
@@ -233,7 +238,7 @@ export class MockProvider implements AgentProvider {
     const content = mockPropose(opts.mockRole ?? "queue", opts.mockSeed ?? 1, opts.mockContext);
     return {
       content,
-      call: { provider: "mock", model: "dev-mock", latencyMs: Date.now() - t0, attempts: 1, finishReason: "stop", usage: null },
+      call: { provider: "mock", startedAt: new Date(t0).toISOString(), model: "dev-mock", latencyMs: Date.now() - t0, attempts: 1, finishReason: "stop", usage: null },
     };
   }
 }

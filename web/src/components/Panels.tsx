@@ -379,3 +379,100 @@ export function ActivityLog({ items }: { items: ActivityEvent[] }) {
     </div>
   );
 }
+
+/**
+ * Parallel agent timeline, reconstructed from recorded timestamps only:
+ * each bar is a real model call (start = recorded start, length = measured latency).
+ */
+export function ParallelTimeline({ exp }: { exp: Experiment }) {
+  const rounds = exp.rounds.filter((r) => r.finishedAt);
+  if (rounds.length === 0) return <div className="muted small">Run improvement rounds to see when each agent's model calls ran.</div>;
+  const roles = ["corridor", "queue", "robustness"] as const;
+  const data = rounds.map((r) => {
+    const t0 = Date.parse(r.startedAt);
+    const cands = exp.candidates.filter((c) => c.round === r.round);
+    let lastCallEnd = 0;
+    let sequential = 0;
+    const rows = roles.map((role) => {
+      const c = cands.find((x) => x.role === role);
+      const segs: { start: number; end: number; repair: boolean }[] = [];
+      let cursor = c ? (Date.parse(c.createdAt) - t0) / 1000 : 0;
+      c?.calls.forEach((k, i) => {
+        const start = k.startedAt ? (Date.parse(k.startedAt) - t0) / 1000 : cursor;
+        const end = start + k.latencyMs / 1000;
+        segs.push({ start, end, repair: i > 0 });
+        sequential += k.latencyMs / 1000;
+        cursor = end;
+        lastCallEnd = Math.max(lastCallEnd, end);
+      });
+      return { role, cand: c, segs };
+    });
+    const total = (Date.parse(r.finishedAt!) - t0) / 1000;
+    return { round: r.round, rows, wall: lastCallEnd, sequential, total };
+  });
+  const maxT = Math.max(...data.map((d) => Math.max(d.total, d.sequential)));
+  const sumSeq = data.reduce((a, d) => a + d.sequential, 0);
+  const sumWall = data.reduce((a, d) => a + d.wall, 0);
+  const W = 1000;
+  const labelW = 44;
+  const statW = 210;
+  const plotW = W - labelW - statW;
+  const rowH = 13;
+  const groupH = rowH * 3 + 14;
+  const H = data.length * groupH + 26;
+  const x = (t: number) => labelW + (t / maxT) * plotW;
+  const ticks: number[] = [];
+  for (let t = 0; t <= maxT; t += 60) ticks.push(t);
+  const fmtT = (s: number) => `${Math.floor(s / 60)}m${String(Math.round(s % 60)).padStart(2, "0")}s`;
+  return (
+    <div className="timeline">
+      <div className="tl-head">
+        <div>
+          <div className="tl-big">{(sumSeq / Math.max(1, sumWall)).toFixed(1)}× faster</div>
+          <div className="muted small">
+            {data.length} rounds of proposals took <b>{fmtT(sumWall)}</b> of wall-clock time; the same {exp.candidates.reduce((a, c) => a + c.calls.length, 0)} model calls run one after another would take <b>{fmtT(sumSeq)}</b>.
+          </div>
+        </div>
+        <div className="legend">
+          {roles.map((r) => (
+            <span key={r}><i className="lg-sw" style={{ background: ROLE_COLORS[r] }} /> {r}</span>
+          ))}
+          <span><i className="lg-sw repair" /> repair retry</span>
+          <span><i className="lg-sw sim" /> simulation + selection</span>
+          <span>★ new champion</span>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Timeline of concurrent agent model calls per round">
+        {ticks.map((t) => (
+          <g key={t}>
+            <line x1={x(t)} x2={x(t)} y1={0} y2={H - 18} className="grid" />
+            <text x={x(t)} y={H - 4} className="axis" textAnchor="middle">{t === 0 ? "round start" : `${t / 60} min`}</text>
+          </g>
+        ))}
+        {data.map((d, gi) => {
+          const y0 = gi * groupH + 4;
+          return (
+            <g key={d.round}>
+              <text x={4} y={y0 + rowH * 1.5 + 4} className="tl-round">R{d.round}</text>
+              <rect x={x(d.wall)} y={y0} width={Math.max(1, x(d.total) - x(d.wall))} height={rowH * 3 - 2} className="tl-sim" />
+              {d.rows.map((row, ri) =>
+                row.segs.map((s, si) => (
+                  <rect key={`${ri}-${si}`} x={x(s.start)} y={y0 + ri * rowH} width={Math.max(1.5, x(s.end) - x(s.start))} height={rowH - 3} rx={2} fill={ROLE_COLORS[row.role]} opacity={s.repair ? 0.45 : 0.95}>
+                    <title>{`R${d.round} ${row.cand?.roleLabel ?? row.role}${s.repair ? " (repair retry)" : ""}: ${(s.end - s.start).toFixed(0)} s model call — ${row.cand?.name ?? ""}`}</title>
+                  </rect>
+                )),
+              )}
+              {d.rows.map((row, ri) =>
+                row.cand?.status === "accepted" ? (
+                  <text key={`w${ri}`} x={x(row.segs[row.segs.length - 1]?.end ?? 0) + 4} y={y0 + ri * rowH + rowH - 4} className="tl-star">★</text>
+                ) : null,
+              )}
+              <text x={W - statW + 8} y={y0 + rowH + 2} className="tl-stat">parallel {fmtT(d.wall)} · sequential {fmtT(d.sequential)}</text>
+              <text x={W - statW + 8} y={y0 + rowH * 2 + 4} className="axis">{(d.sequential / Math.max(1, d.wall)).toFixed(1)}× · round total {fmtT(d.total)}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}

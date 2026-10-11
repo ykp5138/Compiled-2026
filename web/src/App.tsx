@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, fmt, subscribe, type PublicState, type Replay } from "./api";
 import { MapPanel, type ControllerOption } from "./components/MapPanel";
-import { ActivityLog, AgentCards, ChampionHistory, HeldOutPanel, Leaderboard, RoundChart } from "./components/Panels";
+import { ActivityLog, AgentCards, ChampionHistory, HeldOutPanel, Leaderboard, ParallelTimeline, RoundChart } from "./components/Panels";
 
 const SPEEDS = [1, 2, 5, 10, 20];
 
@@ -251,6 +251,10 @@ export function App() {
             <div className="panel span2">
               <h2>Agent team <span className="muted small">· three concurrent {provider?.kind === "luminal" ? "Luminal" : "development"} model calls per round</span></h2>
               <AgentCards agents={state!.agents} exp={exp} />
+            </div>
+            <div className="panel span2">
+              <h2>Parallel agent timeline <span className="muted small">· every bar is a recorded model call; agents in a round run at the same time</span></h2>
+              <ParallelTimeline exp={exp} />
             </div>
             <div className="panel">
               <h2>Improvement by round</h2>
