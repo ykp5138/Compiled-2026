@@ -340,3 +340,4 @@ tr.detail td { background: var(--inset); white-space: normal; text-align: left; 
   .story h1 { font-size: 52px; }
 }
 .frozen-note { color: var(--text2); font-size: 13px; max-width: 420px; }
+button.badge { background: transparent; font: inherit; font-family: var(--mono); font-size: 11px; cursor: pointer; }

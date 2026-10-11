@@ -35,7 +35,8 @@ import { agentDefs, buildMessages, parseProposal, repairMessages, type AgentCont
 import { config } from "./config";
 import { generateHeldOutSuite } from "./heldout";
 import { createProvider, type AgentProvider } from "./providers";
-import { listRuns, loadExperiment, newRunId, runDir, saveExperiment } from "./store";
+import { mongo } from "./mongo";
+import { listRuns, loadAllExperiments, loadExperiment, newRunId, runDir, saveExperiment } from "./store";
 import type { BaselineRecord, CandidateRecord, Experiment, SuiteResult } from "./types";
 
 export type AgentPhase = "idle" | "proposing" | "repairing" | "validating" | "testing" | "dev-check" | "accepted" | "rejected" | "invalid" | "error";
@@ -102,8 +103,21 @@ export class Orchestrator extends EventEmitter {
   }
 
   private changed() {
-    if (this.exp) saveExperiment(this.exp);
+    if (this.exp) {
+      saveExperiment(this.exp);
+      mongo.schedule(this.exp);
+    }
     this.emit("state");
+  }
+
+  /** Reconcile local JSON runs with MongoDB (no-op without MONGODB_URI). */
+  async syncStorage(): Promise<{ pulled: string[]; pushed: string[] }> {
+    if (!mongo.enabled) return { pulled: [], pushed: [] };
+    const res = await mongo.sync(loadAllExperiments(), (e) => saveExperiment(e, true));
+    if (res.pulled.length) this.log(`Pulled ${res.pulled.length} run(s) from MongoDB: ${res.pulled.join(", ")}`);
+    if (res.pushed.length) this.log(`Pushed ${res.pushed.length} local run(s) to MongoDB`);
+    this.emit("state");
+    return res;
   }
 
   private async evalSuite(policy: Policy, scenarios: Scenario[]): Promise<SuiteResult> {
@@ -134,6 +148,12 @@ export class Orchestrator extends EventEmitter {
   }
 
   async init(): Promise<void> {
+    mongo.onChange = () => this.emit("agents");
+    if (mongo.enabled) {
+      this.log(`Connecting to MongoDB (${mongo.status.host}, database "${mongo.status.database}")`);
+      await this.syncStorage();
+      if (mongo.status.lastError) this.log(`MongoDB unavailable, using local JSON only: ${mongo.status.lastError}`);
+    }
     const runs = listRuns();
     for (const r of runs) {
       try {
@@ -613,6 +633,7 @@ export class Orchestrator extends EventEmitter {
       live: this.live,
       provider: this.provider.info(),
       runs: listRuns(),
+      storage: mongo.status,
       scenarios: this.scenarioList(),
     };
   }

@@ -8,10 +8,10 @@ export function runDir(runId: string): string {
   return path.join(config.experimentsDir, runId);
 }
 
-export function saveExperiment(exp: Experiment): void {
+export function saveExperiment(exp: Experiment, keepTimestamp = false): void {
   const dir = runDir(exp.runId);
   mkdirSync(dir, { recursive: true });
-  exp.updatedAt = new Date().toISOString();
+  if (!keepTimestamp) exp.updatedAt = new Date().toISOString();
   const file = path.join(dir, "experiment.json");
   const tmp = `${file}.tmp`;
   writeFileSync(tmp, redact(JSON.stringify(exp, null, 1)));
@@ -63,4 +63,10 @@ export function newRunId(): string {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return `run-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+}
+
+export function loadAllExperiments(): Experiment[] {
+  return listRuns()
+    .map((r) => loadExperiment(r.runId))
+    .filter((e): e is Experiment => e !== null);
 }

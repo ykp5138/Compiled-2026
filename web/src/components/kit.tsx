@@ -21,7 +21,19 @@ export function Badges({ gw }: { gw: GW }) {
       <span className="badge">Simplified State College network · synthetic traffic</span>
       {p && <span className={`badge ${p.kind === "mock" ? "warn" : ""}`}>{p.kind === "mock" ? "Development provider · not Luminal" : `Agents: Luminal · ${p.model.split("/").pop()}`}</span>}
       {gw.recorded && gw.exp && <span className="badge rec">Recorded run · {gw.exp.runId}</span>}
+      <StorageBadge gw={gw} />
     </div>
+  );
+}
+
+function StorageBadge({ gw }: { gw: GW }) {
+  const st = gw.state?.storage;
+  if (!st || st.kind === "json") return <span className="badge">Storage: local JSON</span>;
+  const ok = st.connected && !st.lastError;
+  return (
+    <button type="button" className={`badge ${ok ? "" : "warn"}`} title={st.lastError ?? `Last sync ${st.lastSyncAt ?? "never"} · click to sync`} onClick={() => gw.act(api.sync)}>
+      Storage: MongoDB {st.host.includes("mongodb.net") ? "Atlas" : st.host} · {ok ? "synced" : "offline, using local JSON"}
+    </button>
   );
 }
 

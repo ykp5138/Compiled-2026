@@ -16,9 +16,12 @@
     "bench": "tsx server/cli/bench.ts",
     "optimize": "tsx server/cli/optimize.ts",
     "final": "tsx server/cli/final.ts",
-    "ablation": "tsx server/cli/ablation.ts"
+    "ablation": "tsx server/cli/ablation.ts",
+    "migrate:mongo": "tsx server/cli/migrate.ts",
+    "build:manhattan": "tsx server/cli/build-manhattan.ts"
   },
   "dependencies": {
+    "mongodb": "^6.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

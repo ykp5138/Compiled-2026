@@ -1,12 +1,16 @@
 // Network loading and derivation: links, lanes, movements, phases, conflicts and routes.
 // The editable source of truth is network.json; everything here is derived deterministically.
 import rawNetwork from "./network.json";
+import manhattanNetwork from "./networks/manhattan-east-village.json";
 
 export type Turn = "T" | "L" | "R";
 export type LinkKind = "entry" | "internal" | "exit";
 
 export interface RawNetwork {
+  id?: string;
   name: string;
+  /** Plain-language description given to the agents (first lines of the NETWORK section). */
+  description?: string[];
   disclaimer: string;
   notes: string[];
   laneWidth: number;
@@ -23,9 +27,11 @@ export interface RawNetwork {
   };
   map: {
     bounds: { minX: number; minY: number; maxX: number; maxY: number };
-    campus: { x0: number; y0: number; x1: number; y1: number; label: string };
-    landmarks: { label: string; x: number; y: number; w: number; h: number }[];
-    downtownLabel: { text: string; x: number; y: number };
+    campus?: { x0: number; y0: number; x1: number; y1: number; label: string };
+    /** Extra labelled context areas (parks, campuses). */
+    areas?: { x0: number; y0: number; x1: number; y1: number; label: string; kind?: string }[];
+    landmarks?: { label: string; x: number; y: number; w: number; h: number }[];
+    downtownLabel?: { text: string; x: number; y: number };
     streetLabels: { text: string; x: number; y: number; angle: number }[];
   };
 }
@@ -295,8 +301,38 @@ export function describeLink(l: Link): string {
 
 export { headingName };
 
-let cached: Network | null = null;
-export function getNetwork(): Network {
-  if (!cached) cached = buildNetwork();
-  return cached;
+export const DEFAULT_NETWORK_ID = "state-college";
+
+/** Registered networks. Each is an editable JSON file; experiments record which one they use. */
+export const NETWORK_SOURCES: Record<string, RawNetwork> = {
+  "state-college": { id: "state-college", ...(rawNetwork as unknown as RawNetwork) },
+  "manhattan-east-village": manhattanNetwork as unknown as RawNetwork,
+};
+
+export function listNetworks(): { id: string; name: string; signals: number }[] {
+  return Object.entries(NETWORK_SOURCES).map(([id, r]) => ({ id, name: r.name, signals: r.intersections.length }));
+}
+
+const cache = new Map<string, Network>();
+export function getNetwork(id: string = DEFAULT_NETWORK_ID): Network {
+  let n = cache.get(id);
+  if (!n) {
+    const raw = NETWORK_SOURCES[id];
+    if (!raw) throw new Error(`Unknown network ${id}`);
+    n = buildNetwork(raw);
+    cache.set(id, n);
+  }
+  return n;
+}
+
+/** Build (and memoize by content) a network from a raw definition stored in an experiment. */
+const rawCache = new Map<string, Network>();
+export function networkFromRaw(raw: RawNetwork): Network {
+  const key = raw.id ?? JSON.stringify(raw).length + ":" + raw.name;
+  let n = rawCache.get(key);
+  if (!n || JSON.stringify(n.raw) !== JSON.stringify(raw)) {
+    n = buildNetwork(raw);
+    rawCache.set(key, n);
+  }
+  return n;
 }

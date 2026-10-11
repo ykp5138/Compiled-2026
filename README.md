@@ -54,6 +54,16 @@ Without Luminal credentials the app runs with a **development provider** that ma
 
 **Luminal note:** requests are streamed (`stream: true`). Luminal returned `503 service_unavailable` for non-streaming requests that ran longer than about 20 s, and DeepSeek V4.1 Flash usually reasons for 30–100 s per proposal.
 
+## Optional: MongoDB Atlas
+
+Set `MONGODB_URI` (from Atlas: Connect, then Drivers) and optionally `MONGODB_DB` (default `greenwave`) in `.env`. Local JSON stays the working copy, so the app works offline.
+
+- **Write-through:** every save is also upserted to MongoDB.
+- **Collections:** `experiments` (one per run), `candidates` (one per proposal), `rounds`, `ablations`.
+- **Startup sync:** the server pulls runs that exist only in Atlas (for example from teammates) and pushes local runs Atlas doesn't have yet.
+
+Run `npm run migrate:mongo` to copy and verify all existing runs. The UI shows a **Storage** badge; click it to sync. Replays stay on disk because they can be regenerated deterministically. Tests and the random-search ablation never write to MongoDB.
+
 ## Reproducible commands
 
 ```bash

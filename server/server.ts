@@ -27,7 +27,7 @@ function broadcast(event: string, data: unknown) {
 }
 
 orch.on("state", () => broadcast("state", orch.publicState()));
-orch.on("agents", () => broadcast("agents", { agents: Object.values(orch.agents), activity: orch.activity.slice(-60), busy: orch.busy, progress: orch.progress }));
+orch.on("agents", () => broadcast("agents", { agents: Object.values(orch.agents), activity: orch.activity.slice(-60), busy: orch.busy, progress: orch.progress, storage: orch.publicState().storage }));
 
 async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> {
   const chunks: Buffer[] = [];
@@ -99,6 +99,10 @@ const server = createServer(async (req, res) => {
       if (orch.busy) return send(res, 409, { error: `Busy: ${orch.busy}` });
       runInBackground("New experiment", () => orch.createExperiment());
       return send(res, 202, { ok: true });
+    }
+    if (p === "/api/sync" && req.method === "POST") {
+      const result = await orch.syncStorage();
+      return send(res, 200, { ...result, storage: orch.publicState().storage });
     }
     if (p === "/api/runs/load" && req.method === "POST") {
       const body = await readJson(req);

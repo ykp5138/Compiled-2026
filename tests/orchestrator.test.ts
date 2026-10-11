@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const tmp = mkdtempSync(path.join(os.tmpdir(), "greenwave-test-"));
 Object.assign(process.env, {
   AGENT_PROVIDER: "mock",
+  MONGODB_URI: "",
   EXPERIMENTS_DIR: tmp,
   SIM_HORIZON: "240",
   SIM_DRAIN: "60",

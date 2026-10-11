@@ -12,6 +12,8 @@ const seeds = Number(arg("seeds") ?? 3);
 const tmp = mkdtempSync(path.join(os.tmpdir(), "greenwave-ablation-"));
 process.env.EXPERIMENTS_DIR = tmp;
 process.env.AGENT_PROVIDER = "mock";
+// Random-search control runs are scratch data: never mirror them to MongoDB.
+process.env.MONGODB_URI = "";
 
 const { aggregate, compare, getNetwork, makePolicyController, runEpisode } = await import("../../sim");
 const { loadExperimentFrom } = await import("./load");

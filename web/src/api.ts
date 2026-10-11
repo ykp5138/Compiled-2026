@@ -4,6 +4,7 @@ import type { ActivityEvent, AgentStatus } from "../../server/orchestrator";
 import type { ProviderInfo } from "../../server/providers";
 import type { RunListing } from "../../server/store";
 import type { Experiment } from "../../server/types";
+import type { StorageStatus } from "../../server/mongo";
 
 export type { Experiment, AgentStatus, ActivityEvent, ProviderInfo, RunListing, Replay, ScenarioManifest };
 export type { CandidateRecord, SuiteResult } from "../../server/types";
@@ -18,6 +19,7 @@ export interface PublicState {
   provider: ProviderInfo;
   runs: RunListing[];
   scenarios: ScenarioManifest[];
+  storage?: StorageStatus;
 }
 
 async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
@@ -37,12 +39,13 @@ export const api = {
   freeze: () => req<{ ok: boolean }>("POST", "/api/freeze"),
   newExperiment: () => req<{ ok: boolean }>("POST", "/api/experiments/new"),
   loadRun: (runId: string) => req<{ ok: boolean }>("POST", "/api/runs/load", { runId }),
+  sync: () => req<{ pulled: string[]; pushed: string[] }>("POST", "/api/sync"),
   check: () => req<{ ok: boolean; detail: string; latencyMs: number; provider: ProviderInfo }>("POST", "/api/check"),
   replay: (scenario: string, controller: string) =>
     req<Replay>("GET", `/api/replay?scenario=${encodeURIComponent(scenario)}&controller=${encodeURIComponent(controller)}`),
 };
 
-export function subscribe(onState: (s: PublicState) => void, onAgents: (a: Pick<PublicState, "agents" | "activity" | "busy" | "progress">) => void, onError: (m: string) => void): () => void {
+export function subscribe(onState: (s: PublicState) => void, onAgents: (a: Pick<PublicState, "agents" | "activity" | "busy" | "progress" | "storage">) => void, onError: (m: string) => void): () => void {
   const es = new EventSource("/api/events");
   es.addEventListener("state", (e) => onState(JSON.parse((e as MessageEvent).data)));
   es.addEventListener("agents", (e) => onAgents(JSON.parse((e as MessageEvent).data)));

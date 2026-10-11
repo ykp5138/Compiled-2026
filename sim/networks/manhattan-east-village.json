@@ -1,0 +1,2490 @@
+{
+ "id": "manhattan-east-village",
+ "name": "Downtown Manhattan · East Village grid",
+ "disclaimer": "Simplified Manhattan (East Village) network · geometry from Google Maps · synthetic traffic",
+ "description": [
+  "Simplified downtown Manhattan network (East Village), synthetic traffic, 24 signals. Drawn with avenues vertical (\"Manhattan north\"); the real grid is rotated about 29° east of true north.",
+  "Avenues west to east: 2nd Ave (one-way SOUTHBOUND, 3 lanes), 1st Ave (one-way NORTHBOUND, 3 lanes), Avenue A and Avenue B (two-way, 1 lane each way). Main arterials: 1st and 2nd Ave.",
+  "Streets north to south: E 14th St (two-way, 2 lanes each way, main crosstown), then one-way side streets E 13th (WB), E 12th (EB), E 11th (WB), E 10th (EB), E 9th (WB). Side streets and Avenues A/B are the minor approaches to protect from starvation.",
+  "Intersection IDs are <street>_<avenue>, e.g. S14_A1 = E 14th St & 1st Ave. Phase 0 = avenue movements, phase 1 = street movements."
+ ],
+ "notes": [
+  "Intersection coordinates from Google Maps Routes API lookups (one per avenue × street), projected to metres, rotated so avenues are vertical, and snapped to the median position of each avenue and street.",
+  "Lane counts, one-way directions and turn permissions are approximate simulation assumptions; left turns from two-way approaches are omitted (no permissive lefts).",
+  "Every intersection is modeled as signalized with two phases (avenue / street). Pedestrians, parking, buses and bike lanes are not modeled."
+ ],
+ "laneWidth": 3.5,
+ "intersectionInset": 12,
+ "nodes": [
+  {
+   "id": "S14_A2",
+   "kind": "signal",
+   "x": 0,
+   "y": 0,
+   "name": "E 14th St & 2nd Ave"
+  },
+  {
+   "id": "S14_A1",
+   "kind": "signal",
+   "x": 229,
+   "y": 0,
+   "name": "E 14th St & 1st Ave"
+  },
+  {
+   "id": "S14_AA",
+   "kind": "signal",
+   "x": 443,
+   "y": 0,
+   "name": "E 14th St & Avenue A"
+  },
+  {
+   "id": "S14_AB",
+   "kind": "signal",
+   "x": 667,
+   "y": 0,
+   "name": "E 14th St & Avenue B"
+  },
+  {
+   "id": "S13_A2",
+   "kind": "signal",
+   "x": 0,
+   "y": 87,
+   "name": "E 13th St & 2nd Ave"
+  },
+  {
+   "id": "S13_A1",
+   "kind": "signal",
+   "x": 229,
+   "y": 87,
+   "name": "E 13th St & 1st Ave"
+  },
+  {
+   "id": "S13_AA",
+   "kind": "signal",
+   "x": 443,
+   "y": 87,
+   "name": "E 13th St & Avenue A"
+  },
+  {
+   "id": "S13_AB",
+   "kind": "signal",
+   "x": 667,
+   "y": 87,
+   "name": "E 13th St & Avenue B"
+  },
+  {
+   "id": "S12_A2",
+   "kind": "signal",
+   "x": 0,
+   "y": 168,
+   "name": "E 12th St & 2nd Ave"
+  },
+  {
+   "id": "S12_A1",
+   "kind": "signal",
+   "x": 229,
+   "y": 168,
+   "name": "E 12th St & 1st Ave"
+  },
+  {
+   "id": "S12_AA",
+   "kind": "signal",
+   "x": 443,
+   "y": 168,
+   "name": "E 12th St & Avenue A"
+  },
+  {
+   "id": "S12_AB",
+   "kind": "signal",
+   "x": 667,
+   "y": 168,
+   "name": "E 12th St & Avenue B"
+  },
+  {
+   "id": "S11_A2",
+   "kind": "signal",
+   "x": 0,
+   "y": 249,
+   "name": "E 11th St & 2nd Ave"
+  },
+  {
+   "id": "S11_A1",
+   "kind": "signal",
+   "x": 229,
+   "y": 249,
+   "name": "E 11th St & 1st Ave"
+  },
+  {
+   "id": "S11_AA",
+   "kind": "signal",
+   "x": 443,
+   "y": 249,
+   "name": "E 11th St & Avenue A"
+  },
+  {
+   "id": "S11_AB",
+   "kind": "signal",
+   "x": 667,
+   "y": 249,
+   "name": "E 11th St & Avenue B"
+  },
+  {
+   "id": "S10_A2",
+   "kind": "signal",
+   "x": 0,
+   "y": 325,
+   "name": "E 10th St & 2nd Ave"
+  },
+  {
+   "id": "S10_A1",
+   "kind": "signal",
+   "x": 229,
+   "y": 325,
+   "name": "E 10th St & 1st Ave"
+  },
+  {
+   "id": "S10_AA",
+   "kind": "signal",
+   "x": 443,
+   "y": 325,
+   "name": "E 10th St & Avenue A"
+  },
+  {
+   "id": "S10_AB",
+   "kind": "signal",
+   "x": 667,
+   "y": 325,
+   "name": "E 10th St & Avenue B"
+  },
+  {
+   "id": "S9_A2",
+   "kind": "signal",
+   "x": 0,
+   "y": 399,
+   "name": "E 9th St & 2nd Ave"
+  },
+  {
+   "id": "S9_A1",
+   "kind": "signal",
+   "x": 229,
+   "y": 399,
+   "name": "E 9th St & 1st Ave"
+  },
+  {
+   "id": "S9_AA",
+   "kind": "signal",
+   "x": 443,
+   "y": 399,
+   "name": "E 9th St & Avenue A"
+  },
+  {
+   "id": "S9_AB",
+   "kind": "signal",
+   "x": 667,
+   "y": 399,
+   "name": "E 9th St & Avenue B"
+  },
+  {
+   "id": "BN_A2",
+   "kind": "boundary",
+   "x": 0,
+   "y": -90
+  },
+  {
+   "id": "BS_A2",
+   "kind": "boundary",
+   "x": 0,
+   "y": 489
+  },
+  {
+   "id": "BN_A1",
+   "kind": "boundary",
+   "x": 229,
+   "y": -90
+  },
+  {
+   "id": "BS_A1",
+   "kind": "boundary",
+   "x": 229,
+   "y": 489
+  },
+  {
+   "id": "BN_AA",
+   "kind": "boundary",
+   "x": 443,
+   "y": -90
+  },
+  {
+   "id": "BS_AA",
+   "kind": "boundary",
+   "x": 443,
+   "y": 489
+  },
+  {
+   "id": "BN_AB",
+   "kind": "boundary",
+   "x": 667,
+   "y": -90
+  },
+  {
+   "id": "BS_AB",
+   "kind": "boundary",
+   "x": 667,
+   "y": 489
+  },
+  {
+   "id": "BW_S14",
+   "kind": "boundary",
+   "x": -110,
+   "y": 0
+  },
+  {
+   "id": "BE_S14",
+   "kind": "boundary",
+   "x": 777,
+   "y": 0
+  },
+  {
+   "id": "BW_S13",
+   "kind": "boundary",
+   "x": -110,
+   "y": 87
+  },
+  {
+   "id": "BE_S13",
+   "kind": "boundary",
+   "x": 777,
+   "y": 87
+  },
+  {
+   "id": "BW_S12",
+   "kind": "boundary",
+   "x": -110,
+   "y": 168
+  },
+  {
+   "id": "BE_S12",
+   "kind": "boundary",
+   "x": 777,
+   "y": 168
+  },
+  {
+   "id": "BW_S11",
+   "kind": "boundary",
+   "x": -110,
+   "y": 249
+  },
+  {
+   "id": "BE_S11",
+   "kind": "boundary",
+   "x": 777,
+   "y": 249
+  },
+  {
+   "id": "BW_S10",
+   "kind": "boundary",
+   "x": -110,
+   "y": 325
+  },
+  {
+   "id": "BE_S10",
+   "kind": "boundary",
+   "x": 777,
+   "y": 325
+  },
+  {
+   "id": "BW_S9",
+   "kind": "boundary",
+   "x": -110,
+   "y": 399
+  },
+  {
+   "id": "BE_S9",
+   "kind": "boundary",
+   "x": 777,
+   "y": 399
+  }
+ ],
+ "links": [
+  {
+   "id": "A2_sb_0",
+   "from": "BN_A2",
+   "to": "S14_A2",
+   "street": "2nd Ave",
+   "dir": "SB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A2_sb_1",
+   "from": "S14_A2",
+   "to": "S13_A2",
+   "street": "2nd Ave",
+   "dir": "SB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A2_sb_2",
+   "from": "S13_A2",
+   "to": "S12_A2",
+   "street": "2nd Ave",
+   "dir": "SB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A2_sb_3",
+   "from": "S12_A2",
+   "to": "S11_A2",
+   "street": "2nd Ave",
+   "dir": "SB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A2_sb_4",
+   "from": "S11_A2",
+   "to": "S10_A2",
+   "street": "2nd Ave",
+   "dir": "SB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A2_sb_5",
+   "from": "S10_A2",
+   "to": "S9_A2",
+   "street": "2nd Ave",
+   "dir": "SB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A2_sb_6",
+   "from": "S9_A2",
+   "to": "BS_A2",
+   "street": "2nd Ave",
+   "dir": "SB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A1_nb_0",
+   "from": "BS_A1",
+   "to": "S9_A1",
+   "street": "1st Ave",
+   "dir": "NB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A1_nb_1",
+   "from": "S9_A1",
+   "to": "S10_A1",
+   "street": "1st Ave",
+   "dir": "NB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A1_nb_2",
+   "from": "S10_A1",
+   "to": "S11_A1",
+   "street": "1st Ave",
+   "dir": "NB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A1_nb_3",
+   "from": "S11_A1",
+   "to": "S12_A1",
+   "street": "1st Ave",
+   "dir": "NB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A1_nb_4",
+   "from": "S12_A1",
+   "to": "S13_A1",
+   "street": "1st Ave",
+   "dir": "NB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A1_nb_5",
+   "from": "S13_A1",
+   "to": "S14_A1",
+   "street": "1st Ave",
+   "dir": "NB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "A1_nb_6",
+   "from": "S14_A1",
+   "to": "BN_A1",
+   "street": "1st Ave",
+   "dir": "NB",
+   "lanes": 3,
+   "speed": 11.2
+  },
+  {
+   "id": "AA_sb_0",
+   "from": "BN_AA",
+   "to": "S14_AA",
+   "street": "Avenue A",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_sb_1",
+   "from": "S14_AA",
+   "to": "S13_AA",
+   "street": "Avenue A",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_sb_2",
+   "from": "S13_AA",
+   "to": "S12_AA",
+   "street": "Avenue A",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_sb_3",
+   "from": "S12_AA",
+   "to": "S11_AA",
+   "street": "Avenue A",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_sb_4",
+   "from": "S11_AA",
+   "to": "S10_AA",
+   "street": "Avenue A",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_sb_5",
+   "from": "S10_AA",
+   "to": "S9_AA",
+   "street": "Avenue A",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_sb_6",
+   "from": "S9_AA",
+   "to": "BS_AA",
+   "street": "Avenue A",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_nb_0",
+   "from": "BS_AA",
+   "to": "S9_AA",
+   "street": "Avenue A",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_nb_1",
+   "from": "S9_AA",
+   "to": "S10_AA",
+   "street": "Avenue A",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_nb_2",
+   "from": "S10_AA",
+   "to": "S11_AA",
+   "street": "Avenue A",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_nb_3",
+   "from": "S11_AA",
+   "to": "S12_AA",
+   "street": "Avenue A",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_nb_4",
+   "from": "S12_AA",
+   "to": "S13_AA",
+   "street": "Avenue A",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_nb_5",
+   "from": "S13_AA",
+   "to": "S14_AA",
+   "street": "Avenue A",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AA_nb_6",
+   "from": "S14_AA",
+   "to": "BN_AA",
+   "street": "Avenue A",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_sb_0",
+   "from": "BN_AB",
+   "to": "S14_AB",
+   "street": "Avenue B",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_sb_1",
+   "from": "S14_AB",
+   "to": "S13_AB",
+   "street": "Avenue B",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_sb_2",
+   "from": "S13_AB",
+   "to": "S12_AB",
+   "street": "Avenue B",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_sb_3",
+   "from": "S12_AB",
+   "to": "S11_AB",
+   "street": "Avenue B",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_sb_4",
+   "from": "S11_AB",
+   "to": "S10_AB",
+   "street": "Avenue B",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_sb_5",
+   "from": "S10_AB",
+   "to": "S9_AB",
+   "street": "Avenue B",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_sb_6",
+   "from": "S9_AB",
+   "to": "BS_AB",
+   "street": "Avenue B",
+   "dir": "SB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_nb_0",
+   "from": "BS_AB",
+   "to": "S9_AB",
+   "street": "Avenue B",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_nb_1",
+   "from": "S9_AB",
+   "to": "S10_AB",
+   "street": "Avenue B",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_nb_2",
+   "from": "S10_AB",
+   "to": "S11_AB",
+   "street": "Avenue B",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_nb_3",
+   "from": "S11_AB",
+   "to": "S12_AB",
+   "street": "Avenue B",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_nb_4",
+   "from": "S12_AB",
+   "to": "S13_AB",
+   "street": "Avenue B",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_nb_5",
+   "from": "S13_AB",
+   "to": "S14_AB",
+   "street": "Avenue B",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "AB_nb_6",
+   "from": "S14_AB",
+   "to": "BN_AB",
+   "street": "Avenue B",
+   "dir": "NB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S14_eb_0",
+   "from": "BW_S14",
+   "to": "S14_A2",
+   "street": "E 14th St",
+   "dir": "EB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S14_eb_1",
+   "from": "S14_A2",
+   "to": "S14_A1",
+   "street": "E 14th St",
+   "dir": "EB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S14_eb_2",
+   "from": "S14_A1",
+   "to": "S14_AA",
+   "street": "E 14th St",
+   "dir": "EB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S14_eb_3",
+   "from": "S14_AA",
+   "to": "S14_AB",
+   "street": "E 14th St",
+   "dir": "EB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S14_eb_4",
+   "from": "S14_AB",
+   "to": "BE_S14",
+   "street": "E 14th St",
+   "dir": "EB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S14_wb_0",
+   "from": "BE_S14",
+   "to": "S14_AB",
+   "street": "E 14th St",
+   "dir": "WB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S14_wb_1",
+   "from": "S14_AB",
+   "to": "S14_AA",
+   "street": "E 14th St",
+   "dir": "WB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S14_wb_2",
+   "from": "S14_AA",
+   "to": "S14_A1",
+   "street": "E 14th St",
+   "dir": "WB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S14_wb_3",
+   "from": "S14_A1",
+   "to": "S14_A2",
+   "street": "E 14th St",
+   "dir": "WB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S14_wb_4",
+   "from": "S14_A2",
+   "to": "BW_S14",
+   "street": "E 14th St",
+   "dir": "WB",
+   "lanes": 2,
+   "speed": 11.2
+  },
+  {
+   "id": "S13_wb_0",
+   "from": "BE_S13",
+   "to": "S13_AB",
+   "street": "E 13th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S13_wb_1",
+   "from": "S13_AB",
+   "to": "S13_AA",
+   "street": "E 13th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S13_wb_2",
+   "from": "S13_AA",
+   "to": "S13_A1",
+   "street": "E 13th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S13_wb_3",
+   "from": "S13_A1",
+   "to": "S13_A2",
+   "street": "E 13th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S13_wb_4",
+   "from": "S13_A2",
+   "to": "BW_S13",
+   "street": "E 13th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S12_eb_0",
+   "from": "BW_S12",
+   "to": "S12_A2",
+   "street": "E 12th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S12_eb_1",
+   "from": "S12_A2",
+   "to": "S12_A1",
+   "street": "E 12th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S12_eb_2",
+   "from": "S12_A1",
+   "to": "S12_AA",
+   "street": "E 12th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S12_eb_3",
+   "from": "S12_AA",
+   "to": "S12_AB",
+   "street": "E 12th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S12_eb_4",
+   "from": "S12_AB",
+   "to": "BE_S12",
+   "street": "E 12th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S11_wb_0",
+   "from": "BE_S11",
+   "to": "S11_AB",
+   "street": "E 11th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S11_wb_1",
+   "from": "S11_AB",
+   "to": "S11_AA",
+   "street": "E 11th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S11_wb_2",
+   "from": "S11_AA",
+   "to": "S11_A1",
+   "street": "E 11th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S11_wb_3",
+   "from": "S11_A1",
+   "to": "S11_A2",
+   "street": "E 11th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S11_wb_4",
+   "from": "S11_A2",
+   "to": "BW_S11",
+   "street": "E 11th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S10_eb_0",
+   "from": "BW_S10",
+   "to": "S10_A2",
+   "street": "E 10th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S10_eb_1",
+   "from": "S10_A2",
+   "to": "S10_A1",
+   "street": "E 10th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S10_eb_2",
+   "from": "S10_A1",
+   "to": "S10_AA",
+   "street": "E 10th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S10_eb_3",
+   "from": "S10_AA",
+   "to": "S10_AB",
+   "street": "E 10th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S10_eb_4",
+   "from": "S10_AB",
+   "to": "BE_S10",
+   "street": "E 10th St",
+   "dir": "EB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S9_wb_0",
+   "from": "BE_S9",
+   "to": "S9_AB",
+   "street": "E 9th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S9_wb_1",
+   "from": "S9_AB",
+   "to": "S9_AA",
+   "street": "E 9th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S9_wb_2",
+   "from": "S9_AA",
+   "to": "S9_A1",
+   "street": "E 9th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S9_wb_3",
+   "from": "S9_A1",
+   "to": "S9_A2",
+   "street": "E 9th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  },
+  {
+   "id": "S9_wb_4",
+   "from": "S9_A2",
+   "to": "BW_S9",
+   "street": "E 9th St",
+   "dir": "WB",
+   "lanes": 1,
+   "speed": 8.9
+  }
+ ],
+ "intersections": [
+  {
+   "id": "S14_A2",
+   "movements": [
+    [
+     "A2_sb_0",
+     "A2_sb_1",
+     "T"
+    ],
+    [
+     "A2_sb_0",
+     "S14_eb_1",
+     "L"
+    ],
+    [
+     "A2_sb_0",
+     "S14_wb_4",
+     "R"
+    ],
+    [
+     "S14_eb_0",
+     "A2_sb_1",
+     "R"
+    ],
+    [
+     "S14_eb_0",
+     "S14_eb_1",
+     "T"
+    ],
+    [
+     "S14_wb_3",
+     "S14_wb_4",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "2nd Ave SB",
+     "movements": [
+      "A2_sb_0>A2_sb_1",
+      "A2_sb_0>S14_eb_1",
+      "A2_sb_0>S14_wb_4"
+     ]
+    },
+    {
+     "name": "E 14th St EB / E 14th St WB",
+     "movements": [
+      "S14_eb_0>A2_sb_1",
+      "S14_eb_0>S14_eb_1",
+      "S14_wb_3>S14_wb_4"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S14_A1",
+   "movements": [
+    [
+     "A1_nb_5",
+     "A1_nb_6",
+     "T"
+    ],
+    [
+     "A1_nb_5",
+     "S14_eb_2",
+     "R"
+    ],
+    [
+     "A1_nb_5",
+     "S14_wb_3",
+     "L"
+    ],
+    [
+     "S14_eb_1",
+     "S14_eb_2",
+     "T"
+    ],
+    [
+     "S14_wb_2",
+     "A1_nb_6",
+     "R"
+    ],
+    [
+     "S14_wb_2",
+     "S14_wb_3",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "1st Ave NB",
+     "movements": [
+      "A1_nb_5>A1_nb_6",
+      "A1_nb_5>S14_eb_2",
+      "A1_nb_5>S14_wb_3"
+     ]
+    },
+    {
+     "name": "E 14th St EB / E 14th St WB",
+     "movements": [
+      "S14_eb_1>S14_eb_2",
+      "S14_wb_2>A1_nb_6",
+      "S14_wb_2>S14_wb_3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S14_AA",
+   "movements": [
+    [
+     "AA_sb_0",
+     "AA_sb_1",
+     "T"
+    ],
+    [
+     "AA_sb_0",
+     "S14_wb_2",
+     "R"
+    ],
+    [
+     "AA_nb_5",
+     "AA_nb_6",
+     "T"
+    ],
+    [
+     "AA_nb_5",
+     "S14_eb_3",
+     "R"
+    ],
+    [
+     "S14_eb_2",
+     "AA_sb_1",
+     "R"
+    ],
+    [
+     "S14_eb_2",
+     "S14_eb_3",
+     "T"
+    ],
+    [
+     "S14_wb_1",
+     "AA_nb_6",
+     "R"
+    ],
+    [
+     "S14_wb_1",
+     "S14_wb_2",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue A SB / Avenue A NB",
+     "movements": [
+      "AA_sb_0>AA_sb_1",
+      "AA_sb_0>S14_wb_2",
+      "AA_nb_5>AA_nb_6",
+      "AA_nb_5>S14_eb_3"
+     ]
+    },
+    {
+     "name": "E 14th St EB / E 14th St WB",
+     "movements": [
+      "S14_eb_2>AA_sb_1",
+      "S14_eb_2>S14_eb_3",
+      "S14_wb_1>AA_nb_6",
+      "S14_wb_1>S14_wb_2"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S14_AB",
+   "movements": [
+    [
+     "AB_sb_0",
+     "AB_sb_1",
+     "T"
+    ],
+    [
+     "AB_sb_0",
+     "S14_wb_1",
+     "R"
+    ],
+    [
+     "AB_nb_5",
+     "AB_nb_6",
+     "T"
+    ],
+    [
+     "AB_nb_5",
+     "S14_eb_4",
+     "R"
+    ],
+    [
+     "S14_eb_3",
+     "AB_sb_1",
+     "R"
+    ],
+    [
+     "S14_eb_3",
+     "S14_eb_4",
+     "T"
+    ],
+    [
+     "S14_wb_0",
+     "AB_nb_6",
+     "R"
+    ],
+    [
+     "S14_wb_0",
+     "S14_wb_1",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue B SB / Avenue B NB",
+     "movements": [
+      "AB_sb_0>AB_sb_1",
+      "AB_sb_0>S14_wb_1",
+      "AB_nb_5>AB_nb_6",
+      "AB_nb_5>S14_eb_4"
+     ]
+    },
+    {
+     "name": "E 14th St EB / E 14th St WB",
+     "movements": [
+      "S14_eb_3>AB_sb_1",
+      "S14_eb_3>S14_eb_4",
+      "S14_wb_0>AB_nb_6",
+      "S14_wb_0>S14_wb_1"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S13_A2",
+   "movements": [
+    [
+     "A2_sb_1",
+     "A2_sb_2",
+     "T"
+    ],
+    [
+     "A2_sb_1",
+     "S13_wb_4",
+     "R"
+    ],
+    [
+     "S13_wb_3",
+     "A2_sb_2",
+     "L"
+    ],
+    [
+     "S13_wb_3",
+     "S13_wb_4",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "2nd Ave SB",
+     "movements": [
+      "A2_sb_1>A2_sb_2",
+      "A2_sb_1>S13_wb_4"
+     ]
+    },
+    {
+     "name": "E 13th St WB",
+     "movements": [
+      "S13_wb_3>A2_sb_2",
+      "S13_wb_3>S13_wb_4"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S13_A1",
+   "movements": [
+    [
+     "A1_nb_4",
+     "A1_nb_5",
+     "T"
+    ],
+    [
+     "A1_nb_4",
+     "S13_wb_3",
+     "L"
+    ],
+    [
+     "S13_wb_2",
+     "A1_nb_5",
+     "R"
+    ],
+    [
+     "S13_wb_2",
+     "S13_wb_3",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "1st Ave NB",
+     "movements": [
+      "A1_nb_4>A1_nb_5",
+      "A1_nb_4>S13_wb_3"
+     ]
+    },
+    {
+     "name": "E 13th St WB",
+     "movements": [
+      "S13_wb_2>A1_nb_5",
+      "S13_wb_2>S13_wb_3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S13_AA",
+   "movements": [
+    [
+     "AA_sb_1",
+     "AA_sb_2",
+     "T"
+    ],
+    [
+     "AA_sb_1",
+     "S13_wb_2",
+     "R"
+    ],
+    [
+     "AA_nb_4",
+     "AA_nb_5",
+     "T"
+    ],
+    [
+     "S13_wb_1",
+     "AA_sb_2",
+     "L"
+    ],
+    [
+     "S13_wb_1",
+     "AA_nb_5",
+     "R"
+    ],
+    [
+     "S13_wb_1",
+     "S13_wb_2",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue A SB / Avenue A NB",
+     "movements": [
+      "AA_sb_1>AA_sb_2",
+      "AA_sb_1>S13_wb_2",
+      "AA_nb_4>AA_nb_5"
+     ]
+    },
+    {
+     "name": "E 13th St WB",
+     "movements": [
+      "S13_wb_1>AA_sb_2",
+      "S13_wb_1>AA_nb_5",
+      "S13_wb_1>S13_wb_2"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S13_AB",
+   "movements": [
+    [
+     "AB_sb_1",
+     "AB_sb_2",
+     "T"
+    ],
+    [
+     "AB_sb_1",
+     "S13_wb_1",
+     "R"
+    ],
+    [
+     "AB_nb_4",
+     "AB_nb_5",
+     "T"
+    ],
+    [
+     "S13_wb_0",
+     "AB_sb_2",
+     "L"
+    ],
+    [
+     "S13_wb_0",
+     "AB_nb_5",
+     "R"
+    ],
+    [
+     "S13_wb_0",
+     "S13_wb_1",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue B SB / Avenue B NB",
+     "movements": [
+      "AB_sb_1>AB_sb_2",
+      "AB_sb_1>S13_wb_1",
+      "AB_nb_4>AB_nb_5"
+     ]
+    },
+    {
+     "name": "E 13th St WB",
+     "movements": [
+      "S13_wb_0>AB_sb_2",
+      "S13_wb_0>AB_nb_5",
+      "S13_wb_0>S13_wb_1"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S12_A2",
+   "movements": [
+    [
+     "A2_sb_2",
+     "A2_sb_3",
+     "T"
+    ],
+    [
+     "A2_sb_2",
+     "S12_eb_1",
+     "L"
+    ],
+    [
+     "S12_eb_0",
+     "A2_sb_3",
+     "R"
+    ],
+    [
+     "S12_eb_0",
+     "S12_eb_1",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "2nd Ave SB",
+     "movements": [
+      "A2_sb_2>A2_sb_3",
+      "A2_sb_2>S12_eb_1"
+     ]
+    },
+    {
+     "name": "E 12th St EB",
+     "movements": [
+      "S12_eb_0>A2_sb_3",
+      "S12_eb_0>S12_eb_1"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S12_A1",
+   "movements": [
+    [
+     "A1_nb_3",
+     "A1_nb_4",
+     "T"
+    ],
+    [
+     "A1_nb_3",
+     "S12_eb_2",
+     "R"
+    ],
+    [
+     "S12_eb_1",
+     "A1_nb_4",
+     "L"
+    ],
+    [
+     "S12_eb_1",
+     "S12_eb_2",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "1st Ave NB",
+     "movements": [
+      "A1_nb_3>A1_nb_4",
+      "A1_nb_3>S12_eb_2"
+     ]
+    },
+    {
+     "name": "E 12th St EB",
+     "movements": [
+      "S12_eb_1>A1_nb_4",
+      "S12_eb_1>S12_eb_2"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S12_AA",
+   "movements": [
+    [
+     "AA_sb_2",
+     "AA_sb_3",
+     "T"
+    ],
+    [
+     "AA_nb_3",
+     "AA_nb_4",
+     "T"
+    ],
+    [
+     "AA_nb_3",
+     "S12_eb_3",
+     "R"
+    ],
+    [
+     "S12_eb_2",
+     "AA_sb_3",
+     "R"
+    ],
+    [
+     "S12_eb_2",
+     "AA_nb_4",
+     "L"
+    ],
+    [
+     "S12_eb_2",
+     "S12_eb_3",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue A SB / Avenue A NB",
+     "movements": [
+      "AA_sb_2>AA_sb_3",
+      "AA_nb_3>AA_nb_4",
+      "AA_nb_3>S12_eb_3"
+     ]
+    },
+    {
+     "name": "E 12th St EB",
+     "movements": [
+      "S12_eb_2>AA_sb_3",
+      "S12_eb_2>AA_nb_4",
+      "S12_eb_2>S12_eb_3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S12_AB",
+   "movements": [
+    [
+     "AB_sb_2",
+     "AB_sb_3",
+     "T"
+    ],
+    [
+     "AB_nb_3",
+     "AB_nb_4",
+     "T"
+    ],
+    [
+     "AB_nb_3",
+     "S12_eb_4",
+     "R"
+    ],
+    [
+     "S12_eb_3",
+     "AB_sb_3",
+     "R"
+    ],
+    [
+     "S12_eb_3",
+     "AB_nb_4",
+     "L"
+    ],
+    [
+     "S12_eb_3",
+     "S12_eb_4",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue B SB / Avenue B NB",
+     "movements": [
+      "AB_sb_2>AB_sb_3",
+      "AB_nb_3>AB_nb_4",
+      "AB_nb_3>S12_eb_4"
+     ]
+    },
+    {
+     "name": "E 12th St EB",
+     "movements": [
+      "S12_eb_3>AB_sb_3",
+      "S12_eb_3>AB_nb_4",
+      "S12_eb_3>S12_eb_4"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S11_A2",
+   "movements": [
+    [
+     "A2_sb_3",
+     "A2_sb_4",
+     "T"
+    ],
+    [
+     "A2_sb_3",
+     "S11_wb_4",
+     "R"
+    ],
+    [
+     "S11_wb_3",
+     "A2_sb_4",
+     "L"
+    ],
+    [
+     "S11_wb_3",
+     "S11_wb_4",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "2nd Ave SB",
+     "movements": [
+      "A2_sb_3>A2_sb_4",
+      "A2_sb_3>S11_wb_4"
+     ]
+    },
+    {
+     "name": "E 11th St WB",
+     "movements": [
+      "S11_wb_3>A2_sb_4",
+      "S11_wb_3>S11_wb_4"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S11_A1",
+   "movements": [
+    [
+     "A1_nb_2",
+     "A1_nb_3",
+     "T"
+    ],
+    [
+     "A1_nb_2",
+     "S11_wb_3",
+     "L"
+    ],
+    [
+     "S11_wb_2",
+     "A1_nb_3",
+     "R"
+    ],
+    [
+     "S11_wb_2",
+     "S11_wb_3",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "1st Ave NB",
+     "movements": [
+      "A1_nb_2>A1_nb_3",
+      "A1_nb_2>S11_wb_3"
+     ]
+    },
+    {
+     "name": "E 11th St WB",
+     "movements": [
+      "S11_wb_2>A1_nb_3",
+      "S11_wb_2>S11_wb_3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S11_AA",
+   "movements": [
+    [
+     "AA_sb_3",
+     "AA_sb_4",
+     "T"
+    ],
+    [
+     "AA_sb_3",
+     "S11_wb_2",
+     "R"
+    ],
+    [
+     "AA_nb_2",
+     "AA_nb_3",
+     "T"
+    ],
+    [
+     "S11_wb_1",
+     "AA_sb_4",
+     "L"
+    ],
+    [
+     "S11_wb_1",
+     "AA_nb_3",
+     "R"
+    ],
+    [
+     "S11_wb_1",
+     "S11_wb_2",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue A SB / Avenue A NB",
+     "movements": [
+      "AA_sb_3>AA_sb_4",
+      "AA_sb_3>S11_wb_2",
+      "AA_nb_2>AA_nb_3"
+     ]
+    },
+    {
+     "name": "E 11th St WB",
+     "movements": [
+      "S11_wb_1>AA_sb_4",
+      "S11_wb_1>AA_nb_3",
+      "S11_wb_1>S11_wb_2"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S11_AB",
+   "movements": [
+    [
+     "AB_sb_3",
+     "AB_sb_4",
+     "T"
+    ],
+    [
+     "AB_sb_3",
+     "S11_wb_1",
+     "R"
+    ],
+    [
+     "AB_nb_2",
+     "AB_nb_3",
+     "T"
+    ],
+    [
+     "S11_wb_0",
+     "AB_sb_4",
+     "L"
+    ],
+    [
+     "S11_wb_0",
+     "AB_nb_3",
+     "R"
+    ],
+    [
+     "S11_wb_0",
+     "S11_wb_1",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue B SB / Avenue B NB",
+     "movements": [
+      "AB_sb_3>AB_sb_4",
+      "AB_sb_3>S11_wb_1",
+      "AB_nb_2>AB_nb_3"
+     ]
+    },
+    {
+     "name": "E 11th St WB",
+     "movements": [
+      "S11_wb_0>AB_sb_4",
+      "S11_wb_0>AB_nb_3",
+      "S11_wb_0>S11_wb_1"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S10_A2",
+   "movements": [
+    [
+     "A2_sb_4",
+     "A2_sb_5",
+     "T"
+    ],
+    [
+     "A2_sb_4",
+     "S10_eb_1",
+     "L"
+    ],
+    [
+     "S10_eb_0",
+     "A2_sb_5",
+     "R"
+    ],
+    [
+     "S10_eb_0",
+     "S10_eb_1",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "2nd Ave SB",
+     "movements": [
+      "A2_sb_4>A2_sb_5",
+      "A2_sb_4>S10_eb_1"
+     ]
+    },
+    {
+     "name": "E 10th St EB",
+     "movements": [
+      "S10_eb_0>A2_sb_5",
+      "S10_eb_0>S10_eb_1"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S10_A1",
+   "movements": [
+    [
+     "A1_nb_1",
+     "A1_nb_2",
+     "T"
+    ],
+    [
+     "A1_nb_1",
+     "S10_eb_2",
+     "R"
+    ],
+    [
+     "S10_eb_1",
+     "A1_nb_2",
+     "L"
+    ],
+    [
+     "S10_eb_1",
+     "S10_eb_2",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "1st Ave NB",
+     "movements": [
+      "A1_nb_1>A1_nb_2",
+      "A1_nb_1>S10_eb_2"
+     ]
+    },
+    {
+     "name": "E 10th St EB",
+     "movements": [
+      "S10_eb_1>A1_nb_2",
+      "S10_eb_1>S10_eb_2"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S10_AA",
+   "movements": [
+    [
+     "AA_sb_4",
+     "AA_sb_5",
+     "T"
+    ],
+    [
+     "AA_nb_1",
+     "AA_nb_2",
+     "T"
+    ],
+    [
+     "AA_nb_1",
+     "S10_eb_3",
+     "R"
+    ],
+    [
+     "S10_eb_2",
+     "AA_sb_5",
+     "R"
+    ],
+    [
+     "S10_eb_2",
+     "AA_nb_2",
+     "L"
+    ],
+    [
+     "S10_eb_2",
+     "S10_eb_3",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue A SB / Avenue A NB",
+     "movements": [
+      "AA_sb_4>AA_sb_5",
+      "AA_nb_1>AA_nb_2",
+      "AA_nb_1>S10_eb_3"
+     ]
+    },
+    {
+     "name": "E 10th St EB",
+     "movements": [
+      "S10_eb_2>AA_sb_5",
+      "S10_eb_2>AA_nb_2",
+      "S10_eb_2>S10_eb_3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S10_AB",
+   "movements": [
+    [
+     "AB_sb_4",
+     "AB_sb_5",
+     "T"
+    ],
+    [
+     "AB_nb_1",
+     "AB_nb_2",
+     "T"
+    ],
+    [
+     "AB_nb_1",
+     "S10_eb_4",
+     "R"
+    ],
+    [
+     "S10_eb_3",
+     "AB_sb_5",
+     "R"
+    ],
+    [
+     "S10_eb_3",
+     "AB_nb_2",
+     "L"
+    ],
+    [
+     "S10_eb_3",
+     "S10_eb_4",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue B SB / Avenue B NB",
+     "movements": [
+      "AB_sb_4>AB_sb_5",
+      "AB_nb_1>AB_nb_2",
+      "AB_nb_1>S10_eb_4"
+     ]
+    },
+    {
+     "name": "E 10th St EB",
+     "movements": [
+      "S10_eb_3>AB_sb_5",
+      "S10_eb_3>AB_nb_2",
+      "S10_eb_3>S10_eb_4"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S9_A2",
+   "movements": [
+    [
+     "A2_sb_5",
+     "A2_sb_6",
+     "T"
+    ],
+    [
+     "A2_sb_5",
+     "S9_wb_4",
+     "R"
+    ],
+    [
+     "S9_wb_3",
+     "A2_sb_6",
+     "L"
+    ],
+    [
+     "S9_wb_3",
+     "S9_wb_4",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "2nd Ave SB",
+     "movements": [
+      "A2_sb_5>A2_sb_6",
+      "A2_sb_5>S9_wb_4"
+     ]
+    },
+    {
+     "name": "E 9th St WB",
+     "movements": [
+      "S9_wb_3>A2_sb_6",
+      "S9_wb_3>S9_wb_4"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S9_A1",
+   "movements": [
+    [
+     "A1_nb_0",
+     "A1_nb_1",
+     "T"
+    ],
+    [
+     "A1_nb_0",
+     "S9_wb_3",
+     "L"
+    ],
+    [
+     "S9_wb_2",
+     "A1_nb_1",
+     "R"
+    ],
+    [
+     "S9_wb_2",
+     "S9_wb_3",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "1st Ave NB",
+     "movements": [
+      "A1_nb_0>A1_nb_1",
+      "A1_nb_0>S9_wb_3"
+     ]
+    },
+    {
+     "name": "E 9th St WB",
+     "movements": [
+      "S9_wb_2>A1_nb_1",
+      "S9_wb_2>S9_wb_3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S9_AA",
+   "movements": [
+    [
+     "AA_sb_5",
+     "AA_sb_6",
+     "T"
+    ],
+    [
+     "AA_sb_5",
+     "S9_wb_2",
+     "R"
+    ],
+    [
+     "AA_nb_0",
+     "AA_nb_1",
+     "T"
+    ],
+    [
+     "S9_wb_1",
+     "AA_sb_6",
+     "L"
+    ],
+    [
+     "S9_wb_1",
+     "AA_nb_1",
+     "R"
+    ],
+    [
+     "S9_wb_1",
+     "S9_wb_2",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue A SB / Avenue A NB",
+     "movements": [
+      "AA_sb_5>AA_sb_6",
+      "AA_sb_5>S9_wb_2",
+      "AA_nb_0>AA_nb_1"
+     ]
+    },
+    {
+     "name": "E 9th St WB",
+     "movements": [
+      "S9_wb_1>AA_sb_6",
+      "S9_wb_1>AA_nb_1",
+      "S9_wb_1>S9_wb_2"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S9_AB",
+   "movements": [
+    [
+     "AB_sb_5",
+     "AB_sb_6",
+     "T"
+    ],
+    [
+     "AB_sb_5",
+     "S9_wb_1",
+     "R"
+    ],
+    [
+     "AB_nb_0",
+     "AB_nb_1",
+     "T"
+    ],
+    [
+     "S9_wb_0",
+     "AB_sb_6",
+     "L"
+    ],
+    [
+     "S9_wb_0",
+     "AB_nb_1",
+     "R"
+    ],
+    [
+     "S9_wb_0",
+     "S9_wb_1",
+     "T"
+    ]
+   ],
+   "phases": [
+    {
+     "name": "Avenue B SB / Avenue B NB",
+     "movements": [
+      "AB_sb_5>AB_sb_6",
+      "AB_sb_5>S9_wb_1",
+      "AB_nb_0>AB_nb_1"
+     ]
+    },
+    {
+     "name": "E 9th St WB",
+     "movements": [
+      "S9_wb_0>AB_sb_6",
+      "S9_wb_0>AB_nb_1",
+      "S9_wb_0>S9_wb_1"
+     ]
+    }
+   ]
+  }
+ ],
+ "demand": {
+  "baseVehPerHour": {
+   "A2_sb_0": 1400,
+   "A1_nb_0": 1400,
+   "AA_sb_0": 320,
+   "AA_nb_0": 320,
+   "AB_sb_0": 260,
+   "AB_nb_0": 260,
+   "S14_eb_0": 700,
+   "S14_wb_0": 700,
+   "S13_wb_0": 220,
+   "S12_eb_0": 220,
+   "S11_wb_0": 220,
+   "S10_eb_0": 220,
+   "S9_wb_0": 220
+  },
+  "sideStreetOrigins": [
+   "AA_sb_0",
+   "AA_nb_0",
+   "AB_sb_0",
+   "AB_nb_0",
+   "S13_wb_0",
+   "S12_eb_0",
+   "S11_wb_0",
+   "S10_eb_0",
+   "S9_wb_0"
+  ],
+  "arterialOrigins": [
+   "A2_sb_0",
+   "A1_nb_0"
+  ],
+  "crossArterialOrigins": [
+   "S14_eb_0",
+   "S14_wb_0"
+  ],
+  "destinationShares": {
+   "A2_sb_0": {
+    "A2_sb_6": 0.55,
+    "A1_nb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S10_eb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "A1_nb_0": {
+    "A1_nb_6": 0.55,
+    "A2_sb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S10_eb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "AA_sb_0": {
+    "AA_sb_6": 0.55,
+    "A2_sb_6": 0.0375,
+    "A1_nb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S10_eb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "AA_nb_0": {
+    "AA_nb_6": 0.55,
+    "A2_sb_6": 0.0375,
+    "A1_nb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S10_eb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "AB_sb_0": {
+    "AB_sb_6": 0.55,
+    "A2_sb_6": 0.0375,
+    "A1_nb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S10_eb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "AB_nb_0": {
+    "AB_nb_6": 0.55,
+    "S14_eb_4": 0.15,
+    "S12_eb_4": 0.15,
+    "S10_eb_4": 0.15
+   },
+   "S14_eb_0": {
+    "S14_eb_4": 0.55,
+    "A2_sb_6": 0.0375,
+    "A1_nb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S10_eb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "S14_wb_0": {
+    "S14_wb_4": 0.55,
+    "A1_nb_6": 0.15,
+    "AA_nb_6": 0.15,
+    "AB_nb_6": 0.15
+   },
+   "S13_wb_0": {
+    "S13_wb_4": 0.55,
+    "A2_sb_6": 0.0375,
+    "A1_nb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S10_eb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "S12_eb_0": {
+    "S12_eb_4": 0.55,
+    "A2_sb_6": 0.0375,
+    "A1_nb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S10_eb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "S11_wb_0": {
+    "S11_wb_4": 0.55,
+    "A2_sb_6": 0.0375,
+    "A1_nb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S10_eb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "S10_eb_0": {
+    "S10_eb_4": 0.55,
+    "A2_sb_6": 0.0375,
+    "A1_nb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S9_wb_4": 0.0375
+   },
+   "S9_wb_0": {
+    "S9_wb_4": 0.55,
+    "A2_sb_6": 0.0375,
+    "A1_nb_6": 0.0375,
+    "AA_sb_6": 0.0375,
+    "AA_nb_6": 0.0375,
+    "AB_sb_6": 0.0375,
+    "AB_nb_6": 0.0375,
+    "S14_eb_4": 0.0375,
+    "S14_wb_4": 0.0375,
+    "S13_wb_4": 0.0375,
+    "S12_eb_4": 0.0375,
+    "S11_wb_4": 0.0375,
+    "S10_eb_4": 0.0375
+   }
+  }
+ },
+ "map": {
+  "bounds": {
+   "minX": -130,
+   "minY": -160,
+   "maxX": 797,
+   "maxY": 509
+  },
+  "areas": [
+   {
+    "label": "Stuyvesant Town",
+    "x0": 249,
+    "y0": -154,
+    "x1": 727,
+    "y1": -40,
+    "kind": "park"
+   },
+   {
+    "label": "Tompkins Square Park",
+    "x0": 461,
+    "y0": 343,
+    "x1": 649,
+    "y1": 509,
+    "kind": "park"
+   }
+  ],
+  "landmarks": [],
+  "downtownLabel": {
+   "text": "East Village · Manhattan",
+   "x": 114.5,
+   "y": 287
+  },
+  "streetLabels": [
+   {
+    "text": "2nd Ave ↓",
+    "x": -16,
+    "y": 459,
+    "angle": -90
+   },
+   {
+    "text": "1st Ave ↑",
+    "x": 213,
+    "y": 459,
+    "angle": -90
+   },
+   {
+    "text": "Avenue A",
+    "x": 427,
+    "y": 459,
+    "angle": -90
+   },
+   {
+    "text": "Avenue B",
+    "x": 651,
+    "y": 459,
+    "angle": -90
+   },
+   {
+    "text": "E 14th St",
+    "x": -55,
+    "y": -12,
+    "angle": 0
+   },
+   {
+    "text": "E 13th St ←",
+    "x": -55,
+    "y": 75,
+    "angle": 0
+   },
+   {
+    "text": "E 12th St →",
+    "x": -55,
+    "y": 156,
+    "angle": 0
+   },
+   {
+    "text": "E 11th St ←",
+    "x": -55,
+    "y": 237,
+    "angle": 0
+   },
+   {
+    "text": "E 10th St →",
+    "x": -55,
+    "y": 313,
+    "angle": 0
+   },
+   {
+    "text": "E 9th St ←",
+    "x": -55,
+    "y": 387,
+    "angle": 0
+   }
+  ]
+ }
+}

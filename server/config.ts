@@ -27,6 +27,10 @@ export const config = {
     maxRetries: 3,
     maxTokens: Number(process.env.LUMINAL_MAX_TOKENS ?? 32000),
   },
+  mongo: {
+    uri: process.env.MONGODB_URI ?? "",
+    db: process.env.MONGODB_DB ?? "greenwave",
+  },
   experiment: {
     rounds: Number(process.env.ROUNDS ?? 5),
     /** 2 = six concurrent agents (refine + explore per role); 1 = three. */
@@ -56,5 +60,7 @@ export function luminalHost(): string {
 export function redact(text: string): string {
   let out = text;
   if (config.luminal.apiKey) out = out.split(config.luminal.apiKey).join("[REDACTED]");
+  if (process.env.MONGODB_URI) out = out.split(process.env.MONGODB_URI).join("[REDACTED_MONGODB_URI]");
+  out = out.replace(/(mongodb(?:\+srv)?:\/\/)[^@\s/]+@/g, "$1[REDACTED]@");
   return out.replace(/lum_(live|test)_[A-Za-z0-9]+/g, "[REDACTED]");
 }
