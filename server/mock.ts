@@ -18,14 +18,16 @@ export function mockPropose(role: string, seed: number, ctx: unknown): string {
     p.coordination = {
       enabled: true,
       cycle,
-      windows: [
-        { intersection: "C_PUG", phase: 0, offset: 0, length: 20, bonus },
-        { intersection: "C_ALL", phase: 0, offset: 14, length: 20, bonus },
-        { intersection: "C_ATH", phase: 0, offset: 50 % cycle, length: 20, bonus },
-        { intersection: "B_ATH", phase: 0, offset: 0, length: 20, bonus },
-        { intersection: "B_ALL", phase: 0, offset: 36, length: 20, bonus },
-        { intersection: "B_PUG", phase: 0, offset: 50 % cycle, length: 20, bonus },
-      ],
+      windows: p.intersections.C_PUG
+        ? [
+            { intersection: "C_PUG", phase: 0, offset: 0, length: 20, bonus },
+            { intersection: "C_ALL", phase: 0, offset: 14, length: 20, bonus },
+            { intersection: "C_ATH", phase: 0, offset: 50 % cycle, length: 20, bonus },
+            { intersection: "B_ATH", phase: 0, offset: 0, length: 20, bonus },
+            { intersection: "B_ALL", phase: 0, offset: 36, length: 20, bonus },
+            { intersection: "B_PUG", phase: 0, offset: 50 % cycle, length: 20, bonus },
+          ]
+        : Object.keys(p.intersections).map((id, i) => ({ intersection: id, phase: 0, offset: (i * 14) % cycle, length: 20, bonus })),
     };
     name = `Mock progression c${cycle} b${bonus}`;
     explanation = `Enabled coordination windows on both avenues, cycle ${cycle} s, bonus ${bonus}.`;

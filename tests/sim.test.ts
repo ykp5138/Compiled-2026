@@ -156,3 +156,18 @@ describe("replay", () => {
     expect(rep.frames.length).toBe(Math.round((scenario.horizon + scenario.drain) / rep.frameEvery) + 1);
   });
 });
+
+describe("Manhattan (East Village) network from Google Maps geometry", () => {
+  const mh = getNetwork("manhattan-east-village");
+  const sc = generateScenario(mh, "train", "bursty", 77, { horizon: 300, drain: 120, dt: 0.5 });
+  it("builds with conflict-free phases and simulates safely", () => {
+    expect(mh.intersections.length).toBe(24);
+    const r = runEpisode(mh, sc, makePolicyController(buildHeuristicPolicy(mh), mh), { audit: true });
+    expect(r.audit).toMatchObject({ redCrossings: 0, conflictingGreens: 0, capacityViolations: 0, conservationErrors: 0, minGreenViolations: 0, clearanceViolations: 0 });
+    expect(r.metrics.completed + r.metrics.inNetwork + r.metrics.externalBacklog).toBe(r.metrics.scheduled);
+  });
+  it("validates policies against its own intersection IDs", () => {
+    expect(validatePolicy(buildHeuristicPolicy(mh), mh).ok).toBe(true);
+    expect(validatePolicy(buildHeuristicPolicy(net), mh).ok).toBe(false);
+  });
+});

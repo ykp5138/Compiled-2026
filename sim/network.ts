@@ -33,6 +33,12 @@ export interface RawNetwork {
     landmarks?: { label: string; x: number; y: number; w: number; h: number }[];
     downtownLabel?: { text: string; x: number; y: number };
     streetLabels: { text: string; x: number; y: number; angle: number }[];
+    /** Land polygons (rings of [x, y] metres); everything else in the view is water. */
+    land?: number[][][];
+    water?: { label: string; x: number; y: number };
+    /** Unmodeled context streets drawn faintly. */
+    contextStreets?: { label: string; x0: number; y0: number; x1: number; y1: number }[];
+    attribution?: string;
   };
 }
 

@@ -1,4 +1,4 @@
-// Four layouts from the Claude Design canvas "GreenWave State College · four directions".
+// Four layouts from the Claude Design canvas "GreenWave · four directions".
 // All share the same live data, replays and controls (useGreenwave); only arrangement and theme differ.
 import { useState } from "react";
 import type { CandidateRecord, Experiment } from "./api";
@@ -35,10 +35,11 @@ import type { GW } from "./useGreenwave";
 
 function Maps({ gw, theme, bare }: { gw: GW; theme: string; bare?: boolean }) {
   const p = PALETTES[theme];
+  const net = gw.net!;
   return (
     <>
-      <MapPanel side="left" tag="BASELINE" replay={gw.ready ? gw.left.replay : null} loading={gw.left.loading} error={gw.left.error ?? (gw.mismatch ? "Replay mismatch: scenarios differ" : null)} t={gw.t} heat={gw.heat} palette={p} controllerId={gw.leftId} options={gw.leftOptions} onController={gw.setLeftId} bare={bare} />
-      <MapPanel side="right" tag="AGENT CHAMPION" replay={gw.ready ? gw.right.replay : null} loading={gw.right.loading} error={gw.right.error} t={gw.t} heat={gw.heat} palette={p} controllerId={gw.rightId} options={gw.rightOptions} onController={gw.setRightId} bare={bare} />
+      <MapPanel net={net} side="left" tag="BASELINE" replay={gw.ready ? gw.left.replay : null} loading={gw.left.loading} error={gw.left.error ?? (gw.mismatch ? "Replay mismatch: scenarios differ" : null)} t={gw.t} heat={gw.heat} palette={p} controllerId={gw.leftId} options={gw.leftOptions} onController={gw.setLeftId} bare={bare} />
+      <MapPanel net={net} side="right" tag="AGENT CHAMPION" replay={gw.ready ? gw.right.replay : null} loading={gw.right.loading} error={gw.right.error} t={gw.t} heat={gw.heat} palette={p} controllerId={gw.rightId} options={gw.rightOptions} onController={gw.setRightId} bare={bare} />
     </>
   );
 }
@@ -51,7 +52,7 @@ export function OpsLayout({ gw }: { gw: GW }) {
     <div className="app ops">
       <header className="top">
         <div className="top-left">
-          <h1>GreenWave State College</h1>
+          <h1>GreenWave</h1>
           <p className="tagline">Agents propose. Simulation tests. Traffic policies improve.</p>
           <Badges gw={gw} />
         </div>
@@ -117,7 +118,7 @@ export function StoryLayout({ gw }: { gw: GW }) {
     <div className="app story">
       <header className="story-hero">
         <p className="kicker">Track 1 · Self-improving agent team</p>
-        <h1>GreenWave <em>State College</em></h1>
+        <h1>Green<em>Wave</em></h1>
         <p className="lede">Agents propose. Simulation tests. Traffic policies improve.</p>
         <Badges gw={gw} />
       </header>
@@ -125,7 +126,7 @@ export function StoryLayout({ gw }: { gw: GW }) {
 
       <section className="chapter" aria-labelledby="ch1">
         <div className="ch-head"><span className="ch-num">01</span><h2 id="ch1">The problem</h2></div>
-        <p className="ch-text">Six signals in downtown State College: College Avenue one-way west, Beaver Avenue one-way east, crossed by Atherton, Allen and Pugh. Both maps below replay the same pre-generated synthetic traffic. Only the signal policy differs.</p>
+        <p className="ch-text">{exp.network.description?.[0] ?? "Six signals in downtown State College: College Avenue one-way west, Beaver Avenue one-way east, crossed by Atherton, Allen and Pugh."} Both maps below replay the same pre-generated synthetic traffic. Only the signal policy differs.</p>
         <div className="story-controls"><ScenarioSelect gw={gw} /></div>
         <div className="maps"><Maps gw={gw} theme="b" /></div>
         <PlaybackBar gw={gw} />
@@ -190,7 +191,7 @@ export function VersusLayout({ gw }: { gw: GW }) {
   return (
     <div className="app versus">
       <header className="vs-top">
-        <div className="vs-brand"><h1>GreenWave State College</h1><Badges gw={gw} /></div>
+        <div className="vs-brand"><h1>GreenWave</h1><Badges gw={gw} /></div>
         <div className="top-right"><ScenarioSelect gw={gw} /><UtilityButtons gw={gw} /></div>
       </header>
       <Notices gw={gw} />
@@ -301,7 +302,7 @@ export function NotebookLayout({ gw }: { gw: GW }) {
   return (
     <div className="app notebook">
       <header className="top">
-        <div className="top-left"><h1>GreenWave State College</h1><Badges gw={gw} /></div>
+        <div className="top-left"><h1>GreenWave</h1><Badges gw={gw} /></div>
         <UtilityButtons gw={gw} />
       </header>
       <Notices gw={gw} />

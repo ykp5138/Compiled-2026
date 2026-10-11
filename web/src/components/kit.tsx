@@ -18,7 +18,7 @@ export function Badges({ gw }: { gw: GW }) {
   const p = gw.provider;
   return (
     <div className="badges">
-      <span className="badge">Simplified State College network · synthetic traffic</span>
+      <span className="badge">{gw.exp?.network.disclaimer ?? "Simplified network · synthetic traffic"}</span>
       {p && <span className={`badge ${p.kind === "mock" ? "warn" : ""}`}>{p.kind === "mock" ? "Development provider · not Luminal" : `Agents: Luminal · ${p.model.split("/").pop()}`}</span>}
       {gw.recorded && gw.exp && <span className="badge rec">Recorded run · {gw.exp.runId}</span>}
       <StorageBadge gw={gw} />
@@ -34,6 +34,44 @@ function StorageBadge({ gw }: { gw: GW }) {
     <button type="button" className={`badge ${ok ? "" : "warn"}`} title={st.lastError ?? `Last sync ${st.lastSyncAt ?? "never"} · click to sync`} onClick={() => gw.act(api.sync)}>
       Storage: MongoDB {st.host.includes("mongodb.net") ? "Atlas" : st.host} · {ok ? "synced" : "offline, using local JSON"}
     </button>
+  );
+}
+
+const SHORT: Record<string, string> = { "state-college": "State College", "manhattan-east-village": "Manhattan" };
+export const networkShort = (id: string, name?: string) => SHORT[id] ?? name ?? id;
+
+/** Switch the side-by-side maps between networks by loading that network's best recorded run. */
+export function NetworkSwitch({ gw }: { gw: GW }) {
+  const nets = gw.state?.networks ?? [];
+  const runs = gw.state?.runs ?? [];
+  const current = gw.exp?.networkId ?? gw.exp?.network.id ?? "state-college";
+  if (nets.length < 2) return null;
+  const pick = (id: string) => {
+    const mine = runs.filter((r) => r.networkId === id);
+    const best = [...mine].sort((a, b) => Number(b.frozen) - Number(a.frozen) || b.rounds - a.rounds || b.updatedAt.localeCompare(a.updatedAt))[0];
+    if (best) gw.act(() => api.loadRun(best.runId));
+    else gw.act(() => api.newExperiment(id));
+  };
+  return (
+    <div className="net-switch" role="group" aria-label="Map">
+      <span className="hint">MAP</span>
+      {nets.map((n) => {
+        const has = runs.some((r) => r.networkId === n.id);
+        return (
+          <button
+            key={n.id}
+            type="button"
+            aria-pressed={current === n.id}
+            className={current === n.id ? "on" : ""}
+            disabled={!!gw.busy}
+            title={has ? `Load the best recorded ${n.name} run` : `No ${n.name} run yet: starts a new experiment (calibration takes about a minute)`}
+            onClick={() => current !== n.id && pick(n.id)}
+          >
+            {networkShort(n.id, n.name)}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -64,17 +102,23 @@ export function UtilityButtons({ gw }: { gw: GW }) {
   const exp = gw.exp;
   return (
     <div className="util">
+      <NetworkSwitch gw={gw} />
       <button type="button" className="btn" onClick={gw.runCheck}>Check connection</button>
       {exp && (
         <select aria-label="Recorded run" value={exp.runId} disabled={!!gw.busy} onChange={(e) => gw.act(() => api.loadRun(e.target.value))}>
           {(gw.state?.runs ?? []).map((r) => (
             <option key={r.runId} value={r.runId}>
-              {r.runId} · {r.rounds} rounds{r.frozen ? " · frozen" : ""}
+              {networkShort(r.networkId, r.networkName)} · {r.runId} · {r.rounds} rounds{r.frozen ? " · frozen" : ""}
             </option>
           ))}
         </select>
       )}
-      <button type="button" className="btn" disabled={!!gw.busy} onClick={() => gw.act(api.newExperiment)}>New experiment</button>
+      <select aria-label="Network for a new experiment" value={gw.newNetwork} onChange={(e) => gw.setNewNetwork(e.target.value)} disabled={!!gw.busy}>
+        {(gw.state?.networks ?? []).map((n) => (
+          <option key={n.id} value={n.id}>{n.name} · {n.signals} signals</option>
+        ))}
+      </select>
+      <button type="button" className="btn" disabled={!!gw.busy} onClick={() => gw.act(() => api.newExperiment(gw.newNetwork))}>New experiment</button>
       <a className="btn" href="/api/report" download>Download report</a>
     </div>
   );
@@ -95,7 +139,7 @@ export function RunControls({ gw }: { gw: GW }) {
             Switch to open run {open.runId} ({open.rounds} rounds)
           </button>
         ) : (
-          <button type="button" className="btn primary" disabled={!!gw.busy} onClick={() => gw.act(api.newExperiment)}>
+          <button type="button" className="btn primary" disabled={!!gw.busy} onClick={() => gw.act(() => api.newExperiment(gw.newNetwork))}>
             Start a new experiment
           </button>
         )}
@@ -360,15 +404,21 @@ export function ImprovementChart({ exp, height = 240 }: { exp: Experiment; heigh
   const cands = exp.candidates.filter((c) => c.train);
   const fixedDev = exp.baselines.fixed.dev.aggregate.score;
   const heurDev = exp.baselines.heuristic.dev.aggregate.score;
-  const vals = [...cands.map((c) => c.train!.aggregate.score), ...rows.map((r) => r.champDev), fixedDev, heurDev].filter(Number.isFinite);
+  const vals = [...cands.map((c) => c.train!.aggregate.score), ...rows.map((r) => r.champDev), ...rows.map((r) => r.champTrain), fixedDev, heurDev].filter(Number.isFinite);
   const lo0 = Math.min(...vals);
   const hi0 = Math.max(...vals);
-  const lo = Math.floor(lo0 - (hi0 - lo0) * 0.06);
-  const hi = Math.ceil(hi0 + (hi0 - lo0) * 0.06);
+  // "Nice" tick step (1, 2, 2.5 or 5 × 10^k) so axis labels are round numbers.
+  const raw = Math.max(0.5, (hi0 - lo0) / 4);
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const tickStep = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((v) => v >= raw)!;
+  const lo = Math.floor(lo0 / tickStep) * tickStep;
+  const hi = Math.ceil(hi0 / tickStep) * tickStep;
   const x = (r: number) => pad.l + (r / maxR) * (W - pad.l - pad.r);
   const y = (v: number) => pad.t + (1 - (v - lo) / (hi - lo)) * (H - pad.t - pad.b);
-  const step = rows.map((r, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(r.champDev)}${i < rows.length - 1 ? ` L${x(i + 1)},${y(r.champDev)}` : ""}`).join(" ");
-  const ticks = 4;
+  const stepPath = (vals: number[]) => vals.map((v, i) => `${i === 0 ? "M" : "L"}${x(i)},${y(v)}${i < vals.length - 1 ? ` L${x(i + 1)},${y(v)}` : ""}`).join(" ");
+  const step = stepPath(rows.map((r) => r.champDev));
+  const stepTrain = stepPath(rows.map((r) => r.champTrain));
+  const ticks = Math.round((hi - lo) / tickStep);
   return (
     <figure className="chart">
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Champion development score and candidate training scores by round">
@@ -377,7 +427,7 @@ export function ImprovementChart({ exp, height = 240 }: { exp: Experiment; heigh
           return (
             <g key={i}>
               <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} className="grid" />
-              <text x={pad.l - 6} y={y(v) + 4} className="axis" textAnchor="end">{v.toFixed(0)}</text>
+              <text x={pad.l - 6} y={y(v) + 4} className="axis" textAnchor="end">{Number.isInteger(v) ? v : v.toFixed(1)}</text>
             </g>
           );
         })}
@@ -388,6 +438,7 @@ export function ImprovementChart({ exp, height = 240 }: { exp: Experiment; heigh
             <text x={W - pad.r} y={y(v as number) - 4} className="axis" textAnchor="end">{l} {(v as number).toFixed(2)}</text>
           </g>
         ))}
+        <path d={stepTrain} className="champ-train-line" />
         <path d={step} className="champ-line" />
         {rows.map((r, i) => <circle key={i} cx={x(i)} cy={y(r.champDev)} r={3.5} className="champ-dot" />)}
         {cands.map((c) => {
@@ -402,7 +453,8 @@ export function ImprovementChart({ exp, height = 240 }: { exp: Experiment; heigh
       </svg>
       <figcaption className="legend">
         <span className="legend-sw"><i className="lg-line" />Champion · development</span>
-        <span className="legend-sw"><i className="lg-dot" />Candidates · training</span>
+        <span className="legend-sw"><i className="lg-line dashed" />Champion · training</span>
+        <span className="legend-sw"><i className="lg-dot" />Candidates · training (compare to dashed line)</span>
         <span className="legend-sw"><i className="lg-dash" />Baselines · development</span>
       </figcaption>
     </figure>

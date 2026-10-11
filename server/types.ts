@@ -85,6 +85,8 @@ export interface Experiment {
   createdAt: string;
   updatedAt: string;
   simulatorVersion: string;
+  /** Registered network id (absent in early runs = "state-college"). */
+  networkId?: string;
   network: RawNetwork;
   demand: { horizon: number; drain: number; dt: number };
   suiteSpecs: {

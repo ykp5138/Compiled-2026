@@ -1,4 +1,4 @@
-/* GreenWave State College · four layouts from the Claude Design canvas.
+/* GreenWave · four layouts from the Claude Design canvas.
    Tokens per theme; components only use tokens. */
 
 :root, [data-theme="a"] {
@@ -341,3 +341,10 @@ tr.detail td { background: var(--inset); white-space: normal; text-align: left; 
 }
 .frozen-note { color: var(--text2); font-size: 13px; max-width: 420px; }
 button.badge { background: transparent; font: inherit; font-family: var(--mono); font-size: 11px; cursor: pointer; }
+.chart .champ-train-line { fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-dasharray: 6 4; opacity: 0.8; }
+.legend-sw i.lg-line.dashed { height: 0; background: none; border-top: 2px dashed var(--accent); }
+.net-switch { display: inline-flex; align-items: center; gap: 4px; padding: 3px; border: 1px solid var(--line2); border-radius: var(--radius); }
+.net-switch .hint { padding: 0 6px; }
+.net-switch button { min-height: 38px; padding: 0 12px; border: 0; border-radius: var(--radius); background: transparent; color: var(--text2); font-weight: 600; }
+.net-switch button.on { background: var(--accent); color: var(--accent-ink); }
+.net-switch button:disabled { opacity: 0.5; cursor: not-allowed; }

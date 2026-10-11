@@ -71,14 +71,14 @@ export const BOUNDS = {
   hysteresis: [0, 20],
   coordCycle: [40, 150],
   windowBonus: [0, 50],
-  maxWindows: 12,
+  maxWindows: 32,
 } as const;
 
-export const POLICY_SCHEMA_DOC = `Policy JSON (schemaVersion 1). All six intersections are required.
+export const POLICY_SCHEMA_DOC = `Policy JSON (schemaVersion 1). Every intersection of the network is required.
 {
   "schemaVersion": 1,
   "intersections": {
-    "<ID>": {                       // IDs: C_ATH, C_ALL, C_PUG, B_ATH, B_ALL, B_PUG
+    "<ID>": {                       // one entry per intersection ID listed in NETWORK
       "mode": "fixed" | "adaptive",  // which block controls this intersection
       "fixed": {
         "cycle": number,             // ${BOUNDS.cycle[0]}..${BOUNDS.cycle[1]} s, includes ${CLEARANCE} s clearance per phase

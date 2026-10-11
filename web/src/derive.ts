@@ -15,12 +15,13 @@ export interface RoundsRow {
   round: number;
   perRole: Partial<Record<Role, { score: number; accepted: boolean }>>;
   champDev: number;
+  champTrain: number;
   changed: boolean;
 }
 
 export function roundsTable(exp: Experiment): RoundsRow[] {
   const hist = exp.championHistory;
-  const rows: RoundsRow[] = [{ label: "Start", round: 0, perRole: {}, champDev: hist[0]?.devScore ?? NaN, changed: false }];
+  const rows: RoundsRow[] = [{ label: "Start", round: 0, perRole: {}, champDev: hist[0]?.devScore ?? NaN, champTrain: hist[0]?.trainScore ?? NaN, changed: false }];
   for (const r of exp.rounds.filter((x) => x.finishedAt)) {
     const cands = exp.candidates.filter((c) => c.round === r.round && c.train);
     const perRole: RoundsRow["perRole"] = {};
@@ -31,7 +32,7 @@ export function roundsTable(exp: Experiment): RoundsRow[] {
       perRole[role] = { score: best.train!.aggregate.score, accepted: rc.some((c) => c.status === "accepted") };
     }
     const h = [...hist].filter((x) => x.round <= r.round).pop();
-    rows.push({ label: `R${r.round}`, round: r.round, perRole, champDev: h?.devScore ?? NaN, changed: hist.some((x) => x.round === r.round) });
+    rows.push({ label: `R${r.round}`, round: r.round, perRole, champDev: h?.devScore ?? NaN, champTrain: h?.trainScore ?? NaN, changed: hist.some((x) => x.round === r.round) });
   }
   return rows;
 }

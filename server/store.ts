@@ -27,6 +27,8 @@ export function loadExperiment(runId: string): Experiment | null {
 
 export interface RunListing {
   runId: string;
+  networkId: string;
+  networkName: string;
   createdAt: string;
   updatedAt: string;
   provider: string;
@@ -45,6 +47,8 @@ export function listRuns(): RunListing[] {
       const e = JSON.parse(readFileSync(file, "utf8")) as Experiment;
       out.push({
         runId: e.runId,
+        networkId: e.networkId ?? e.network.id ?? "state-college",
+        networkName: e.network.name,
         createdAt: e.createdAt,
         updatedAt: e.updatedAt,
         provider: e.provider.label,

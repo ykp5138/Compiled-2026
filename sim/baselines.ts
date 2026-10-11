@@ -63,22 +63,30 @@ function splitsFor(y: number[], cycle: number): number[] {
   return g.map((x) => +(x / total).toFixed(4));
 }
 
-/** Progression offsets: phase 0 (the avenue) starts when a platoon from the upstream signal arrives. */
+/**
+ * Progression offsets: along each one-way corridor served by phase 0, an intersection's phase-0 green starts when a
+ * platoon released by the upstream signal arrives (sum of free-flow travel times from the corridor's first signal).
+ * Intersections whose phase 0 has more than one approach (two-way) get offset 0.
+ */
 function progressionOffsets(net: Network, cycle: number): Record<string, number> {
-  const tt = (id: string) => {
-    const l = net.linkById.get(id)!;
-    return (l.length + 2 * net.raw.intersectionInset) / l.speed;
+  const memo = new Map<number, number>();
+  const tt = (li: number) => (net.links[li].length + 2 * net.raw.intersectionInset) / net.links[li].speed;
+  const offsetOf = (ii: number, depth = 0): number => {
+    if (memo.has(ii)) return memo.get(ii)!;
+    const inter = net.intersections[ii];
+    const approaches = [...new Set(inter.phases[0].movements.map((mi) => net.movements[mi].from))];
+    let off = 0;
+    if (approaches.length === 1 && depth < 50) {
+      const link = net.links[approaches[0]];
+      const upstream = net.intersections.findIndex((x) => x.id === link.from);
+      if (link.kind === "internal" && upstream >= 0) off = offsetOf(upstream, depth + 1) + tt(link.idx);
+    }
+    memo.set(ii, off);
+    return off;
   };
-  const off: Record<string, number> = {
-    C_PUG: 0,
-    C_ALL: tt("col_pug_all"),
-    C_ATH: tt("col_pug_all") + tt("col_all_ath"),
-    B_ATH: 0,
-    B_ALL: tt("bea_ath_all"),
-    B_PUG: tt("bea_ath_all") + tt("bea_all_pug"),
-  };
-  for (const k of Object.keys(off)) off[k] = +(off[k] % cycle).toFixed(1);
-  return off;
+  const out: Record<string, number> = {};
+  net.intersections.forEach((inter, ii) => (out[inter.id] = +(offsetOf(ii) % cycle).toFixed(1)));
+  return out;
 }
 
 export function defaultAdaptive(nPhases: number): AdaptiveParams {

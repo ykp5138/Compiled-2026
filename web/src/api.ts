@@ -20,6 +20,7 @@ export interface PublicState {
   runs: RunListing[];
   scenarios: ScenarioManifest[];
   storage?: StorageStatus;
+  networks?: { id: string; name: string; signals: number }[];
 }
 
 async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
@@ -37,7 +38,7 @@ export const api = {
   state: () => req<PublicState>("GET", "/api/state"),
   runRounds: (rounds: number) => req<{ ok: boolean }>("POST", "/api/rounds", { rounds }),
   freeze: () => req<{ ok: boolean }>("POST", "/api/freeze"),
-  newExperiment: () => req<{ ok: boolean }>("POST", "/api/experiments/new"),
+  newExperiment: (network?: string) => req<{ ok: boolean }>("POST", "/api/experiments/new", network ? { network } : undefined),
   loadRun: (runId: string) => req<{ ok: boolean }>("POST", "/api/runs/load", { runId }),
   sync: () => req<{ pulled: string[]; pushed: string[] }>("POST", "/api/sync"),
   check: () => req<{ ok: boolean; detail: string; latencyMs: number; provider: ProviderInfo }>("POST", "/api/check"),

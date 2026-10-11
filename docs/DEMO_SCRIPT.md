@@ -3,7 +3,7 @@
 Setup before presenting: `npm run build && npm start`, open http://localhost:8787. The recorded run is selected in the run dropdown and shows the **Recorded run** badge. Default scenario: `dev-bursty-2003`. Default maps: fixed-time on the left, current champion on the right.
 
 **0:00–0:20 · Problem and baseline**
-- "GreenWave State College: three AI agents improve traffic-signal policies for six downtown signals: College, Beaver, Atherton, Allen, Pugh."
+- "GreenWave: AI agents improve traffic-signal policies for six downtown signals: College, Beaver, Atherton, Allen, Pugh."
 - Point at the label: *simplified network, synthetic traffic*. College is one-way westbound and Beaver one-way eastbound.
 - "We start from two honest baselines, both calibrated on training demand only: a Webster fixed-time plan with progression offsets, and a queue-responsive heuristic."
 

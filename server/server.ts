@@ -97,7 +97,9 @@ const server = createServer(async (req, res) => {
     }
     if (p === "/api/experiments/new" && req.method === "POST") {
       if (orch.busy) return send(res, 409, { error: `Busy: ${orch.busy}` });
-      runInBackground("New experiment", () => orch.createExperiment());
+      const body = await readJson(req);
+      const network = typeof body.network === "string" ? body.network : undefined;
+      runInBackground("New experiment", () => orch.createExperiment(network));
       return send(res, 202, { ok: true });
     }
     if (p === "/api/sync" && req.method === "POST") {

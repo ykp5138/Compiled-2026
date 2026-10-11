@@ -14,6 +14,8 @@ import {
   FIXED_BASELINE_ID,
   generateSuite,
   getNetwork,
+  listNetworks,
+  DEFAULT_NETWORK_ID,
   hashString,
   HEURISTIC_BASELINE_ID,
   makePolicyController,
@@ -70,7 +72,7 @@ export const SCORE_DEFINITION =
 const tick = () => new Promise<void>((r) => setImmediate(r));
 
 export class Orchestrator extends EventEmitter {
-  readonly net: Network = getNetwork();
+  net: Network = getNetwork();
   provider: AgentProvider = createProvider();
   exp: Experiment | null = null;
   private train: Scenario[] = [];
@@ -130,7 +132,14 @@ export class Orchestrator extends EventEmitter {
   }
 
   private regenerateSuites(exp: Experiment) {
-    if (exp.simulatorVersion !== SIMULATOR_VERSION || JSON.stringify(exp.network) !== JSON.stringify(this.net.raw)) {
+    const netId = exp.networkId ?? exp.network.id ?? DEFAULT_NETWORK_ID;
+    this.net = getNetwork(netId);
+    // Only simulation-relevant parts must match; map drawing, notes and descriptions may be refreshed.
+    const simParts = (r: Experiment["network"]) => JSON.stringify([r.nodes, r.links, r.intersections, r.demand, r.laneWidth, r.intersectionInset]);
+    if (exp.simulatorVersion === SIMULATOR_VERSION && simParts(exp.network) === simParts(this.net.raw) && JSON.stringify(exp.network.map) !== JSON.stringify(this.net.raw.map)) {
+      exp.network = { ...exp.network, map: this.net.raw.map, disclaimer: this.net.raw.disclaimer, notes: this.net.raw.notes };
+    }
+    if (exp.simulatorVersion !== SIMULATOR_VERSION || simParts(exp.network) !== simParts(this.net.raw)) {
       throw new Error(`Run ${exp.runId} was recorded with a different simulator version or network file`);
     }
     const d = exp.demand;
@@ -149,10 +158,11 @@ export class Orchestrator extends EventEmitter {
 
   async init(): Promise<void> {
     mongo.onChange = () => this.emit("agents");
-    if (mongo.enabled) {
-      this.log(`Connecting to MongoDB (${mongo.status.host}, database "${mongo.status.database}")`);
-      await this.syncStorage();
-      if (mongo.status.lastError) this.log(`MongoDB unavailable, using local JSON only: ${mongo.status.lastError}`);
+    this.busy = "Starting up";
+    try {
+      await this.initStorage();
+    } finally {
+      this.busy = null;
     }
     const runs = listRuns();
     for (const r of runs) {
@@ -163,6 +173,14 @@ export class Orchestrator extends EventEmitter {
       }
     }
     await this.createExperiment();
+  }
+
+  private async initStorage(): Promise<void> {
+    if (mongo.enabled) {
+      this.log(`Connecting to MongoDB (${mongo.status.host}, database "${mongo.status.database}")`);
+      await this.syncStorage();
+      if (mongo.status.lastError) this.log(`MongoDB unavailable, using local JSON only: ${mongo.status.lastError}`);
+    }
   }
 
   loadRun(runId: string): boolean {
@@ -179,8 +197,9 @@ export class Orchestrator extends EventEmitter {
     return true;
   }
 
-  async createExperiment(): Promise<void> {
+  async createExperiment(networkId: string = DEFAULT_NETWORK_ID): Promise<void> {
     if (this.busy) throw new Error(`Busy: ${this.busy}`);
+    this.net = getNetwork(networkId);
     this.busy = "Calibrating baselines on training scenarios";
     this.emit("state");
     try {
@@ -223,6 +242,7 @@ export class Orchestrator extends EventEmitter {
         createdAt: now,
         updatedAt: now,
         simulatorVersion: SIMULATOR_VERSION,
+        networkId,
         network: this.net.raw,
         demand,
         suiteSpecs: specs,
@@ -634,6 +654,7 @@ export class Orchestrator extends EventEmitter {
       provider: this.provider.info(),
       runs: listRuns(),
       storage: mongo.status,
+      networks: listNetworks(),
       scenarios: this.scenarioList(),
     };
   }

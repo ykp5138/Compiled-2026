@@ -17,7 +17,7 @@ export const ROLES: RoleDef[] = [
     id: "corridor",
     label: "Corridor Coordinator",
     focus:
-      "green splits, offsets and coordinated progression along College Ave (westbound: C_PUG -> C_ALL -> C_ATH) and Beaver Ave (eastbound: B_ATH -> B_ALL -> B_PUG). Your levers: coordination windows (cycle, offsets, lengths, bonuses), fixed-time plans (cycle, splits, offsets) and each intersection's mode. Leave queue weights to the Queue Optimizer.",
+      "green splits, offsets and coordinated progression along the main one-way arterials described in NETWORK (platoons travelling signal to signal). Your levers: coordination windows (cycle, offsets, lengths, bonuses), fixed-time plans (cycle, splits, offsets) and each intersection's mode. Leave queue weights to the Queue Optimizer.",
     temperature: 0.7,
   },
   {
@@ -31,7 +31,7 @@ export const ROLES: RoleDef[] = [
     id: "robustness",
     label: "Robustness Optimizer",
     focus:
-      "side-street starvation (Allen, Pugh), tail waiting times (P95/max) and robustness to changing or bursty demand. Your levers: per-phase maxGreen, the oldestWait weight and phaseBias. Avoid gains that come from starving any approach.",
+      "side-street starvation (the minor approaches named in NETWORK), tail waiting times (P95/max) and robustness to changing or bursty demand. Your levers: per-phase maxGreen, the oldestWait weight and phaseBias. Avoid gains that come from starving any approach.",
     temperature: 0.8,
   },
 ];
@@ -115,8 +115,12 @@ export interface AgentContext {
 
 export function describeNetwork(net: Network): string {
   const lines: string[] = [];
-  lines.push("Simplified downtown State College network (synthetic traffic). College Ave is one-way WESTBOUND; Beaver Ave one-way EASTBOUND (south of College).");
-  lines.push("Cross streets west to east: Atherton St (two-way, 2 lanes each way), Allen St and Pugh St (two-way, 1 lane each way, ending at College Ave).");
+  if (net.raw.description?.length) lines.push(...net.raw.description);
+  else {
+    lines.push("Simplified downtown State College network (synthetic traffic). College Ave is one-way WESTBOUND; Beaver Ave one-way EASTBOUND (south of College).");
+    lines.push("Cross streets west to east: Atherton St (two-way, 2 lanes each way), Allen St and Pugh St (two-way, 1 lane each way, ending at College Ave). Main arterials: College and Beaver (corridors C_PUG -> C_ALL -> C_ATH and B_ATH -> B_ALL -> B_PUG). Minor approaches: Allen and Pugh.");
+  }
+  lines.push(`Intersection IDs (${net.intersections.length}): ${net.intersections.map((i) => i.id).join(", ")}.`);
   for (const inter of net.intersections) {
     lines.push(`- ${inter.id} (${inter.name}):`);
     inter.phases.forEach((p, pi) => {
@@ -141,7 +145,7 @@ export function describeNetwork(net: Network): string {
 export function buildMessages(agent: AgentDef, net: Network, ctx: AgentContext, teamSize: number): ChatMessage[] {
   const role = agent.role;
   const system = [
-    `You are the ${role.label} (${agent.variant.label} variant), one of ${teamSize} AI agents working in parallel to improve traffic-signal control policies for a simplified, SYNTHETIC simulation of downtown State College, PA.`,
+    `You are the ${role.label} (${agent.variant.label} variant), one of ${teamSize} AI agents working in parallel to improve traffic-signal control policies for a simplified, SYNTHETIC traffic simulation of ${net.raw.name}.`,
     `Your focus: ${role.focus}`,
     agent.variant.instruction,
     "Each round, every agent (three roles, each with a refine and an explore variant when the team has six members) proposes one competing policy. An ordinary program validates it, simulates it on fixed training scenarios, and checks promising ones on a separate development suite with a predefined selection rule. Unseen held-out tests are run only at the very end.",

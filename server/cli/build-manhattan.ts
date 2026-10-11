@@ -94,6 +94,37 @@ console.log("Avenue x (m):", JSON.stringify(aveX), " street y (m):", JSON.string
 for (let i = 1; i < AVES.length; i++) if (aveX[AVES[i].code] <= aveX[AVES[i - 1].code]) throw new Error("avenue order not monotone");
 for (let i = 1; i < STS.length; i++) if (stY[STS[i].code] <= stY[STS[i - 1].code]) throw new Error("street order not monotone");
 
+// Context-only avenues further east (not modeled): Avenue C and Avenue D, located with the same Google lookups.
+const CONTEXT_AVES = [
+  { name: "Avenue C", query: "Avenue C" },
+  { name: "Avenue D", query: "Avenue D" },
+];
+const contextX: Record<string, number> = {};
+for (const ca of CONTEXT_AVES) {
+  const xs: number[] = [];
+  for (const st of [STS[1], STS[3], STS[5]]) xs.push(rot(await lookup(st.query, ca.query)).X - x0);
+  contextX[ca.name] = Math.round(median(xs));
+}
+writeFileSync(cacheFile, JSON.stringify(cache, null, 1));
+console.log("Context avenues x (m):", JSON.stringify(contextX));
+
+// Manhattan Island outline: OpenStreetMap (Nominatim, relation 3954665), © OpenStreetMap contributors (ODbL).
+// Google Maps Platform has no API that returns coastline geometry.
+const islandFile = path.join(ROOT, "data", "cache", "nominatim-manhattan.json");
+if (!existsSync(islandFile)) {
+  const r = await fetch("https://nominatim.openstreetmap.org/search?q=Manhattan%20Island&format=json&polygon_geojson=1&polygon_threshold=0.0002&limit=1", { headers: { "User-Agent": "greenwave-hackathon/0.1" } });
+  writeFileSync(islandFile, await r.text());
+}
+const island = (JSON.parse(readFileSync(islandFile, "utf8")) as { geojson: { type: string; coordinates: number[][][] | number[][][][] } }[])[0].geojson;
+const polys = (island.type === "Polygon" ? [island.coordinates] : island.coordinates) as number[][][][];
+const land = polys
+  .map((poly) => poly[0].map(([lng, lat]) => {
+    const q = rot({ lat, lng });
+    return [Math.round(q.X - x0), Math.round(q.Y - y0)];
+  }))
+  .filter((ring) => ring.length >= 4);
+console.log(`Island outline: ${land.length} ring(s), ${land.reduce((a, r) => a + r.length, 0)} points`);
+
 const EXT_V = 90;
 const EXT_H = 110;
 const nodes: { id: string; kind: "signal" | "boundary"; x: number; y: number; name?: string }[] = [];
@@ -201,8 +232,13 @@ const arterialOrigins = entries.filter((e) => e.street === "1st Ave" || e.street
 const crossArterialOrigins = entries.filter((e) => e.street === "E 14th St").map((e) => e.id);
 const sideStreetOrigins = entries.filter((e) => !arterialOrigins.includes(e.id) && !crossArterialOrigins.includes(e.id)).map((e) => e.id);
 
+// East River shoreline beside the study area (max land x within the modeled street range).
+const shoreX = Math.max(...land.flat().length ? land.flatMap((r) => r.filter(([, y]) => y > yN - 50 && y < yS + 50).map(([x]) => x)) : [xE]);
 const minX = xW - 20;
-const maxX = xE + 20;
+// Detail view stays on the modeled streets (+ Avenue C as context) so vehicles stay legible;
+// the whole island and both rivers are shown in the map inset.
+const maxX = Math.round(Math.max(xE + 20, contextX["Avenue C"] + 60));
+console.log(`East River shore at x ≈ ${shoreX} m; detail view extends to ${maxX} m`);
 const minY = yN - 70;
 const maxY = yS + 20;
 const raw = {
@@ -230,13 +266,18 @@ const raw = {
     bounds: { minX, minY, maxX, maxY },
     areas: [
       { label: "Stuyvesant Town", x0: aveX.A1 + 20, y0: minY + 6, x1: aveX.AB + 60, y1: yN + 70 - 20, kind: "park" },
-      { label: "Tompkins Square Park", x0: aveX.AA + 18, y0: stY.S10 + 18, x1: aveX.AB - 18, y1: maxY, kind: "park" },
+      { label: "Tompkins Sq. Park", x0: aveX.AA + 18, y0: stY.S10 + 18, x1: aveX.AB - 18, y1: maxY, kind: "park" },
     ],
     landmarks: [],
+    land,
+    water: { label: "East River", x: Math.round((shoreX + maxX) / 2), y: Math.round((stY.S12 + stY.S11) / 2) },
+    contextStreets: CONTEXT_AVES.map((c) => ({ label: c.name, x0: contextX[c.name], y0: minY, x1: contextX[c.name], y1: maxY })),
+    attribution: "Streets: Google Maps Routes API · coastline © OpenStreetMap contributors",
     downtownLabel: { text: "East Village · Manhattan", x: (aveX.A2 + aveX.A1) / 2, y: (stY.S11 + stY.S10) / 2 },
     streetLabels: [
-      ...AVES.map((a) => ({ text: `${a.name}${a.dirs.length === 1 ? (a.dirs[0] === "N" ? " ↑" : " ↓") : ""}`, x: aveX[a.code] - 16, y: yS - 30, angle: -90 })),
-      ...STS.map((s) => ({ text: `${s.name}${s.dirs.length === 1 ? (s.dirs[0] === "E" ? " →" : " ←") : ""}`, x: (xW + aveX.A2) / 2, y: stY[s.code] - 12, angle: 0 })),
+      // Labels are rotated -90°, so "→" renders pointing north and "←" south.
+      ...AVES.map((a) => ({ text: `${a.name}${a.dirs.length === 1 ? (a.dirs[0] === "N" ? "  →" : "  ←") : ""}`, x: aveX[a.code] - 18, y: yS - 40, angle: -90 })),
+      ...STS.map((s) => ({ text: `${s.name}${s.dirs.length === 1 ? (s.dirs[0] === "E" ? " →" : " ←") : ""}`, x: xW + 42, y: stY[s.code] - 14, angle: 0 })),
     ],
   },
 };

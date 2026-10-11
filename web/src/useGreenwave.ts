@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { networkFromRaw } from "../../sim/network";
 import { api, subscribe, type PublicState, type Replay } from "./api";
 
 export interface ControllerOption {
@@ -50,6 +51,8 @@ export function useGreenwave() {
   }, []);
 
   const exp = state?.experiment ?? null;
+  const net = useMemo(() => (exp ? networkFromRaw(exp.network) : null), [exp?.runId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [newNetwork, setNewNetwork] = useState("state-college");
   const runKey = `${exp?.runId ?? ""}:${exp?.championId ?? ""}`;
   const scenarios = state?.scenarios ?? [];
 
@@ -130,6 +133,9 @@ export function useGreenwave() {
   return {
     state,
     exp,
+    net,
+    newNetwork,
+    setNewNetwork,
     toast,
     setToast,
     scenarios,

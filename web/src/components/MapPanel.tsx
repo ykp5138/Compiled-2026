@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getNetwork } from "../../../sim/network";
+import type { Network } from "../../../sim/network";
 import type { Replay } from "../api";
 import { fmt } from "../api";
 import { liveAt } from "../derive";
 import { drawFrame, fitTransform, FrameIndex, type MapPalette } from "../render/mapRenderer";
 import type { ControllerOption } from "../useGreenwave";
 
-const net = getNetwork();
-
 /** Canvas that draws recorded frames at time t. */
-export function MapCanvas({ replay, t, heat, palette, label, error, loading }: { replay: Replay | null; t: number; heat: boolean; palette: MapPalette; label: string; error?: string | null; loading?: boolean }) {
+export function MapCanvas({ net, replay, t, heat, palette, label, error, loading }: { net: Network; replay: Replay | null; t: number; heat: boolean; palette: MapPalette; label: string; error?: string | null; loading?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
@@ -44,7 +42,7 @@ export function MapCanvas({ replay, t, heat, palette, label, error, loading }: {
 
   return (
     <div className="canvas-wrap" ref={wrapRef}>
-      <canvas ref={canvasRef} role="img" aria-label={`${label}: recorded simulation replay of the simplified State College network`} />
+      <canvas ref={canvasRef} role="img" aria-label={`${label}: recorded simulation replay of ${net.raw.name}`} />
       {error && <div className="canvas-msg error">{error}</div>}
       {!error && loading && !replay && <div className="canvas-msg">Simulating replay…</div>}
     </div>
@@ -52,6 +50,7 @@ export function MapCanvas({ replay, t, heat, palette, label, error, loading }: {
 }
 
 interface Props {
+  net: Network;
   side: "left" | "right";
   tag: string;
   replay: Replay | null;
@@ -68,7 +67,7 @@ interface Props {
   bare?: boolean;
 }
 
-export function MapPanel({ side, tag, replay, loading, error, t, heat, palette, controllerId, options, onController, caption, bare }: Props) {
+export function MapPanel({ net, side, tag, replay, loading, error, t, heat, palette, controllerId, options, onController, caption, bare }: Props) {
   const live = liveAt(replay, t);
   return (
     <section className={`map-panel ${side}`} aria-label={tag}>
@@ -85,7 +84,7 @@ export function MapPanel({ side, tag, replay, loading, error, t, heat, palette, 
         </div>
         <span className="hint">{loading ? "simulating replay…" : caption ?? "synchronized · same synthetic traffic"}</span>
       </header>
-      <MapCanvas replay={replay} t={t} heat={heat} palette={palette} label={tag} error={error} loading={loading} />
+      <MapCanvas net={net} replay={replay} t={t} heat={heat} palette={palette} label={tag} error={error} loading={loading} />
       {!bare && (
         <>
           <div className="metric-grid">

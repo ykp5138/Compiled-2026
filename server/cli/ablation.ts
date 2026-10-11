@@ -22,9 +22,10 @@ const { MockProvider } = await import("../providers");
 const { generateHeldOutSuite } = await import("../heldout");
 const { ROOT } = await import("../config");
 
-const net = getNetwork();
 const llm = loadExperimentFrom(path.join(ROOT, "experiments"), llmRunId);
 if (!llm?.heldOut) throw new Error(`${llmRunId} not found or not frozen`);
+const netId = llm.networkId ?? llm.network.id ?? "state-college";
+const net = getNetwork(netId);
 const heldOut = generateHeldOutSuite(net, llm, { championId: llm.heldOut.championId, frozenAt: llm.heldOut.frozenAt });
 const rounds = llm.rounds.length;
 const team = new Set(llm.candidates.map((c) => c.agentId ?? c.role)).size;
@@ -42,7 +43,7 @@ const results: Record<string, unknown>[] = [];
 for (let s = 0; s < seeds; s++) {
   const orch = new Orchestrator();
   orch.provider = new MockProvider();
-  await orch.createExperiment();
+  await orch.createExperiment(netId);
   // Different seed per repetition: the mock seed hashes the run id; make it unique.
   orch.exp!.runId = `${orch.exp!.runId}-rs${s}`;
   await orch.runRounds(rounds);

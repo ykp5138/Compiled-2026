@@ -16,6 +16,8 @@ export interface RenderOptions {
 
 export interface MapPalette {
   bg: string;
+  water: string;
+  waterText: string;
   block: string;
   campus: string;
   campusEdge: string;
@@ -43,24 +45,28 @@ export interface MapPalette {
 /** One palette per layout (Claude Design directions A–D). Cars are the same neutral style in both panels. */
 export const PALETTES: Record<string, MapPalette> = {
   a: {
+    water: "#1b2a36", waterText: "#7d9bb3",
     bg: "#1a2029", block: "#1f2630", campus: "#1c3a31", campusEdge: "#27493d", campusText: "#7fc29b",
     road: "#3a4453", roadEdge: "#12171e", laneDash: "rgba(226,232,240,0.28)", center: "rgba(217,171,87,0.55)",
     car: "#d5d9de", carStroke: "#0b0f14", brake: "#f0524b", green: "#2fd27e", yellow: "#f7c843", red: "#f0524b", head: "#0a0d12",
     label: "#b4becb", halo: "#12171e", landmark: "#27493d", landmarkEdge: "#5f8f76", landmarkText: "#a7d6b9", faint: "#6b7480", font: "Geist, system-ui, sans-serif",
   },
   b: {
+    water: "#cfe0e3", waterText: "#3f6f80",
     bg: "#ece6d8", block: "#e2dbca", campus: "#cfe0c6", campusEdge: "#a9c39c", campusText: "#23573a",
     road: "#fbf8f1", roadEdge: "#c9c0ac", laneDash: "rgba(88,96,88,0.35)", center: "rgba(217,152,43,0.7)",
     car: "#4d544e", carStroke: "#fbf8f1", brake: "#c7352c", green: "#1e7a46", yellow: "#d9982b", red: "#c7352c", head: "#17201b",
     label: "#17201b", halo: "#f6f1e7", landmark: "#b2cdae", landmarkEdge: "#5f8a63", landmarkText: "#23573a", faint: "#8a8672", font: "'Hanken Grotesk', system-ui, sans-serif",
   },
   c: {
+    water: "#0e1820", waterText: "#6f93ad",
     bg: "#101113", block: "#17191c", campus: "#18291f", campusEdge: "#24402f", campusText: "#97cdaa",
     road: "#2b2e33", roadEdge: "#0b0c0e", laneDash: "rgba(213,217,222,0.25)", center: "rgba(242,180,65,0.55)",
     car: "#d5d9de", carStroke: "#0b0c0e", brake: "#f0524b", green: "#2fd27e", yellow: "#f2b441", red: "#f0524b", head: "#0b0c0e",
     label: "#d5d9de", halo: "#0b0c0e", landmark: "#24402f", landmarkEdge: "#5f8f76", landmarkText: "#97cdaa", faint: "#7c838c", font: "Barlow, system-ui, sans-serif",
   },
   d: {
+    water: "#d6e6ef", waterText: "#2f6584",
     bg: "#e7e9ec", block: "#dcdfe3", campus: "#cfe3d3", campusEdge: "#a8c9b0", campusText: "#1f5a38",
     road: "#ffffff", roadEdge: "#c3c8cf", laneDash: "rgba(90,98,109,0.35)", center: "rgba(217,119,6,0.6)",
     car: "#5a626d", carStroke: "#ffffff", brake: "#dc2626", green: "#15803d", yellow: "#d97706", red: "#dc2626", head: "#1b1f24",
@@ -149,21 +155,41 @@ export function drawFrame(
   const P = opts.palette;
   const F = (weight: number, px: number) => `${weight} ${px}px ${P.font}`;
 
-  ctx.fillStyle = P.bg;
-  ctx.fillRect(0, 0, cssW, cssH);
+  const land = net.raw.map.land;
+  const landPath = (tx: (x: number) => number, ty: (y: number) => number) => {
+    const p = new Path2D();
+    for (const ring of land ?? []) {
+      ring.forEach(([x, y], i) => (i === 0 ? p.moveTo(tx(x), ty(y)) : p.lineTo(tx(x), ty(y))));
+      p.closePath();
+    }
+    return p;
+  };
+  if (land) {
+    ctx.fillStyle = P.water;
+    ctx.fillRect(0, 0, cssW, cssH);
+    ctx.save();
+    const lp = landPath(X, Y);
+    ctx.fillStyle = P.bg;
+    ctx.fill(lp);
+    ctx.clip(lp);
+  } else {
+    ctx.fillStyle = P.bg;
+    ctx.fillRect(0, 0, cssW, cssH);
+  }
 
-  // Downtown blocks between modeled streets (context only).
+  // City blocks between modeled streets (context only), derived from signal positions.
   {
     const b = net.raw.map.bounds;
-    const xs = [b.minX, 0, 400, 560, b.maxX];
-    const ys = [0, 140, b.maxY];
-    const m = 16;
+    const uniq = (vals: number[]) => [...new Set(vals.map((v) => Math.round(v)))].sort((p, q) => p - q);
+    const xs = [b.minX, ...uniq([...net.intersections.map((i) => i.x), ...(net.raw.map.contextStreets ?? []).map((c) => c.x0)]), b.maxX];
+    const ys = [b.minY, ...uniq(net.intersections.map((i) => i.y)), b.maxY];
+    const m = net.raw.intersectionInset + 2;
     ctx.fillStyle = P.block;
     for (let i = 0; i < xs.length - 1; i++) {
       for (let j = 0; j < ys.length - 1; j++) {
         const x0 = xs[i] + (i === 0 ? 0 : m);
         const x1 = xs[i + 1] - (i === xs.length - 2 ? 0 : m);
-        const y0 = ys[j] + m;
+        const y0 = ys[j] + (j === 0 ? 0 : m);
         const y1 = ys[j + 1] - (j === ys.length - 2 ? 0 : m);
         if (x1 - x0 > 4 && y1 - y0 > 4) {
           roundRect(ctx, X(x0), Y(y0), (x1 - x0) * scale, (y1 - y0) * scale, 4);
@@ -171,31 +197,29 @@ export function drawFrame(
         }
       }
     }
-    // west of Atherton, north of College
-    roundRect(ctx, X(b.minX), Y(b.minY), (0 - m - b.minX) * scale, (0 - m - b.minY) * scale, 4);
-    ctx.fill();
   }
 
-  // Campus and landmarks (context only, not modeled roads).
-  const c = net.raw.map.campus;
-  ctx.fillStyle = P.campus;
-  ctx.strokeStyle = P.campusEdge;
-  ctx.lineWidth = 1;
-  roundRect(ctx, X(c.x0), Y(c.y0), (c.x1 - c.x0) * scale, (c.y1 - c.y0) * scale, 10);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = P.campusText;
-  ctx.font = F(600, Math.max(10, 12 * scale * 1.6));
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.fillText(c.label, X(c.x0) + 10, Y(c.y0) + 8);
-  for (const lm of net.raw.map.landmarks) {
+  // Context areas (campus, parks) and landmarks; not modeled roads.
+  const areas = [...(net.raw.map.campus ? [net.raw.map.campus] : []), ...(net.raw.map.areas ?? [])];
+  for (const c of areas) {
+    ctx.fillStyle = P.campus;
+    ctx.strokeStyle = P.campusEdge;
+    ctx.lineWidth = 1;
+    roundRect(ctx, X(c.x0), Y(c.y0), (c.x1 - c.x0) * scale, (c.y1 - c.y0) * scale, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = P.campusText;
+    ctx.font = F(600, Math.max(10, 12 * scale * 1.6));
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText(c.label, X(c.x0) + 10, Y(c.y0) + 8);
+  }
+  for (const lm of net.raw.map.landmarks ?? []) {
     ctx.fillStyle = P.landmark;
     ctx.strokeStyle = P.landmarkEdge;
     roundRect(ctx, X(lm.x - lm.w / 2), Y(lm.y - lm.h / 2), lm.w * scale, lm.h * scale, 3);
     ctx.fill();
     ctx.stroke();
-    // small bell tower
     ctx.fillStyle = P.landmarkEdge;
     ctx.fillRect(X(lm.x) - 3 * scale, Y(lm.y - lm.h / 2) - 12 * scale, 6 * scale, 12 * scale);
     ctx.fillStyle = P.landmarkText;
@@ -205,10 +229,37 @@ export function drawFrame(
     ctx.fillText(lm.label, X(lm.x), Y(lm.y + lm.h / 2) + 4);
   }
   const dl = net.raw.map.downtownLabel;
-  ctx.fillStyle = P.faint;
-  ctx.font = F(600, Math.max(10, 11 * scale * 1.6));
-  ctx.textAlign = "center";
-  ctx.fillText(dl.text, X(dl.x), Y(dl.y));
+  if (dl) {
+    ctx.fillStyle = P.faint;
+    ctx.font = F(600, Math.max(10, 11 * scale * 1.6));
+    ctx.textAlign = "center";
+    ctx.fillText(dl.text, X(dl.x), Y(dl.y));
+  }
+  // Unmodeled context streets (faint, no signals or traffic).
+  for (const c of net.raw.map.contextStreets ?? []) {
+    ctx.strokeStyle = P.road;
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 2 * W * scale;
+    line(ctx, X(c.x0), Y(c.y0), X(c.x1), Y(c.y1));
+    ctx.globalAlpha = 1;
+    ctx.save();
+    ctx.translate(X(c.x0) - 2 * W * scale, Y((c.y0 + c.y1) / 2));
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = P.faint;
+    ctx.font = F(500, 11);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(`${c.label} · not modeled`, 0, 0);
+    ctx.restore();
+  }
+  if (land) ctx.restore();
+  const wl = net.raw.map.water;
+  if (wl && X(wl.x) < cssW - 20) {
+    ctx.fillStyle = P.waterText;
+    ctx.font = F(600, 13);
+    ctx.textAlign = "center";
+    ctx.fillText(wl.label, X(wl.x), Y(wl.y));
+  }
 
   // Roads.
   const segs = roadSegments(net);
@@ -383,6 +434,15 @@ export function drawFrame(
     });
   }
 
+  if (land) drawIslandInset(ctx, net, cssW, cssH, P, F, landPath);
+  if (net.raw.map.attribution) {
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = P.faint;
+    ctx.font = F(500, 10);
+    ctx.fillText(net.raw.map.attribution, cssW - 40, cssH - 8);
+  }
+
   // Panel caption, disclaimer and north arrow.
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
@@ -392,7 +452,7 @@ export function drawFrame(
   ctx.textAlign = "right";
   ctx.fillStyle = P.label;
   ctx.font = F(700, 12);
-  ctx.fillText("N ↑", cssW - 12, cssH - 8);
+  ctx.fillText(land ? "Grid N ↑" : "N ↑", cssW - 12, cssH - (net.raw.map.attribution ? 22 : 8));
 }
 
 function heatColor(occ: number): string {
@@ -417,4 +477,79 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.arcTo(x, y + h, x, y, rr);
   ctx.arcTo(x, y, x + w, y, rr);
   ctx.closePath();
+}
+
+/** Whole-island locator inset (same rotated frame as the detail map), with the modeled area highlighted. */
+function drawIslandInset(
+  ctx: CanvasRenderingContext2D,
+  net: Network,
+  cssW: number,
+  cssH: number,
+  P: MapPalette,
+  F: (w: number, px: number) => string,
+  landPath: (tx: (x: number) => number, ty: (y: number) => number) => Path2D,
+) {
+  const rings = net.raw.map.land ?? [];
+  const pts = rings.flat();
+  const minX = Math.min(...pts.map((p) => p[0]));
+  const maxX = Math.max(...pts.map((p) => p[0]));
+  const minY = Math.min(...pts.map((p) => p[1]));
+  const maxY = Math.max(...pts.map((p) => p[1]));
+  const padM = 600;
+  const h = Math.min(cssH * 0.62, 280);
+  const k = (h - 28) / (maxY - minY + 2 * padM);
+  const w = (maxX - minX + 2 * padM) * k + 16;
+  const x0 = cssW - w - 10;
+  const y0 = 10;
+  const tx = (x: number) => x0 + 8 + (x - minX + padM) * k;
+  const ty = (y: number) => y0 + 20 + (y - minY + padM) * k;
+  ctx.save();
+  roundRect(ctx, x0, y0, w, h, 6);
+  ctx.fillStyle = P.water;
+  ctx.fill();
+  ctx.strokeStyle = P.faint;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.clip();
+  ctx.fillStyle = P.block;
+  ctx.fill(landPath(tx, ty));
+  ctx.strokeStyle = P.landmarkEdge;
+  ctx.stroke(landPath(tx, ty));
+  // Modeled area.
+  const xs = net.intersections.map((i) => i.x);
+  const ys = net.intersections.map((i) => i.y);
+  const ax = tx(Math.min(...xs)) - 2;
+  const ay = ty(Math.min(...ys)) - 2;
+  const aw = (Math.max(...xs) - Math.min(...xs)) * k + 4;
+  const ah = (Math.max(...ys) - Math.min(...ys)) * k + 4;
+  ctx.fillStyle = P.red;
+  ctx.fillRect(ax, ay, Math.max(4, aw), Math.max(4, ah));
+  ctx.strokeStyle = P.red;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(ax + aw / 2, ay + ah / 2, 9, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = P.label;
+  ctx.font = F(700, 11);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillText("MANHATTAN", x0 + w / 2, y0 + 5);
+  ctx.fillStyle = P.waterText;
+  ctx.font = F(600, 9);
+  ctx.save();
+  ctx.translate(x0 + 9, y0 + h * 0.5);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText("Hudson River", 0, 0);
+  ctx.restore();
+  ctx.save();
+  ctx.translate(x0 + w - 9, y0 + h * 0.62);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillText("East River", 0, 0);
+  ctx.restore();
+  ctx.fillStyle = P.red;
+  ctx.font = F(700, 9);
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  ctx.fillText("modeled", ax - 12, ay + ah / 2);
+  ctx.restore();
 }

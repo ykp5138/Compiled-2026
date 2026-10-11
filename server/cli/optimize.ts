@@ -1,4 +1,4 @@
-// npm run optimize -- [--run <runId> | --new] [--rounds N]
+// npm run optimize -- [--run <runId> | --new [--network manhattan-east-village]] [--rounds N]
 import { arg, flag } from "./args";
 import { config } from "../config";
 import { Orchestrator } from "../orchestrator";
@@ -8,7 +8,7 @@ orch.on("log", (e: { at: string; role?: string; agent?: string; text: string }) 
   console.log(`[${e.at.slice(11, 19)}]${e.agent ?? e.role ? ` ${(e.agent ?? e.role)!.padEnd(19)}` : " "} ${e.text}`);
 });
 const runId = arg("run");
-if (flag("new")) await orch.createExperiment();
+if (flag("new")) await orch.createExperiment(arg("network"));
 else if (runId) {
   if (!orch.loadRun(runId)) throw new Error(`Run ${runId} not found`);
 } else await orch.init();
