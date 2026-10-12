@@ -643,9 +643,30 @@ export class Orchestrator extends EventEmitter {
     return rep;
   }
 
+  storageStatus() {
+    return mongo.status;
+  }
+
+  /** Experiment without per-approach detail (unused by the UI; kept in the saved file and report). */
+  private slimExperiment(): Experiment | null {
+    if (!this.exp) return null;
+    const slimSuite = <T extends { perScenario: { approaches?: unknown }[] }>(r: T | undefined): T | undefined =>
+      r ? ({ ...r, perScenario: r.perScenario.map(({ approaches: _a, ...m }) => m) } as T) : r;
+    const e = this.exp;
+    return {
+      ...e,
+      baselines: {
+        fixed: { ...e.baselines.fixed, train: slimSuite(e.baselines.fixed.train)!, dev: slimSuite(e.baselines.fixed.dev)! },
+        heuristic: { ...e.baselines.heuristic, train: slimSuite(e.baselines.heuristic.train)!, dev: slimSuite(e.baselines.heuristic.dev)! },
+      },
+      candidates: e.candidates.map((c) => ({ ...c, train: slimSuite(c.train), dev: slimSuite(c.dev) })),
+      heldOut: e.heldOut ? { ...e.heldOut, results: Object.fromEntries(Object.entries(e.heldOut.results).map(([k, r]) => [k, slimSuite(r)!])) } : null,
+    };
+  }
+
   publicState() {
     return {
-      experiment: this.exp,
+      experiment: this.slimExperiment(),
       agents: Object.values(this.agents),
       activity: this.activity.slice(-60),
       busy: this.busy,

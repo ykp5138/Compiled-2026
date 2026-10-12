@@ -3,6 +3,7 @@ import type { Network } from "../../../sim/network";
 import type { Replay } from "../api";
 import { fmt } from "../api";
 import { liveAt } from "../derive";
+import { useClock } from "../clock";
 import { drawFrame, fitTransform, FrameIndex, type MapPalette } from "../render/mapRenderer";
 import type { ControllerOption } from "../useGreenwave";
 
@@ -11,6 +12,8 @@ export function MapCanvas({ net, replay, t, heat, palette, label, error, loading
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  const staticRef = useRef<HTMLCanvasElement | null>(null);
+  const staticKey = useRef("");
   const index = useMemo(() => (replay ? new FrameIndex(replay) : null), [replay]);
 
   useEffect(() => {
@@ -36,8 +39,23 @@ export function MapCanvas({ net, replay, t, heat, palette, label, error, loading
       canvas.style.height = `${h}px`;
     }
     const ctx = canvas.getContext("2d")!;
+    const view = fitTransform(net, w, h);
+    // Static layer (blocks, roads, labels, inset) is drawn once per size/theme/network and cached.
+    const key = `${net.raw.id ?? net.raw.name}|${w}x${h}@${dpr}|${palette.bg}|${palette.font}`;
+    if (staticKey.current !== key || !staticRef.current) {
+      const off = staticRef.current ?? document.createElement("canvas");
+      off.width = Math.round(w * dpr);
+      off.height = Math.round(h * dpr);
+      const octx = off.getContext("2d")!;
+      octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawFrame(octx, net, view, w, h, null, null, 0, { heat: false, label, palette, layer: "static" });
+      staticRef.current = off;
+      staticKey.current = key;
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(staticRef.current, 0, 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawFrame(ctx, net, fitTransform(net, w, h), w, h, replay, index, t, { heat, label, palette });
+    drawFrame(ctx, net, view, w, h, replay, index, t, { heat, label, palette, layer: "dynamic" });
   });
 
   return (
@@ -56,7 +74,6 @@ interface Props {
   replay: Replay | null;
   loading: boolean;
   error: string | null;
-  t: number;
   heat: boolean;
   palette: MapPalette;
   controllerId: string;
@@ -67,7 +84,8 @@ interface Props {
   bare?: boolean;
 }
 
-export function MapPanel({ net, side, tag, replay, loading, error, t, heat, palette, controllerId, options, onController, caption, bare }: Props) {
+export function MapPanel({ net, side, tag, replay, loading, error, heat, palette, controllerId, options, onController, caption, bare }: Props) {
+  const t = useClock();
   const live = liveAt(replay, t);
   return (
     <section className={`map-panel ${side}`} aria-label={tag}>

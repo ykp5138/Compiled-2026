@@ -12,6 +12,8 @@ export interface RenderOptions {
   heat: boolean;
   label: string;
   palette: MapPalette;
+  /** "static" = map background only (cacheable), "dynamic" = signals/vehicles/queues only, default both. */
+  layer?: "all" | "static" | "dynamic";
 }
 
 export interface MapPalette {
@@ -155,6 +157,9 @@ export function drawFrame(
   const P = opts.palette;
   const F = (weight: number, px: number) => `${weight} ${px}px ${P.font}`;
 
+  const layer = opts.layer ?? "all";
+  const doStatic = layer !== "dynamic";
+  const doDynamic = layer !== "static";
   const land = net.raw.map.land;
   const landPath = (tx: (x: number) => number, ty: (y: number) => number) => {
     const p = new Path2D();
@@ -164,6 +169,7 @@ export function drawFrame(
     }
     return p;
   };
+  if (doStatic) {
   if (land) {
     ctx.fillStyle = P.water;
     ctx.fillRect(0, 0, cssW, cssH);
@@ -274,6 +280,11 @@ export function drawFrame(
     line(ctx, X(s.a.x), Y(s.a.y), X(s.b.x), Y(s.b.y));
   }
 
+  // Lane markings, intersection boxes and labels (static).
+  drawMarkings(ctx, net, X, Y, W, scale, P, F);
+  }
+
+  if (doDynamic) {
   // Queue heat overlay: per-link occupancy from the recorded frame.
   const k = replay ? Math.max(0, Math.min(replay.frames.length - 1, Math.floor(t / replay.frameEvery))) : 0;
   const frame: Frame | null = replay ? replay.frames[k] : null;
@@ -292,53 +303,13 @@ export function drawFrame(
     }
   }
 
-  // Lane markings.
-  ctx.setLineDash([3 * scale, 4 * scale]);
-  ctx.lineWidth = Math.max(0.6, 0.25 * scale);
-  for (const l of net.links) {
-    const rx = -l.uy;
-    const ry = l.ux;
-    for (let lane = 0; lane < l.lanes - 1; lane++) {
-      const off = l.twoWay ? (lane + 1) * W : (lane + 1 - l.lanes / 2) * W;
-      ctx.strokeStyle = P.laneDash;
-      line(ctx, X(l.x0 + rx * off), Y(l.y0 + ry * off), X(l.x1 + rx * off), Y(l.y1 + ry * off));
-    }
-  }
-  ctx.setLineDash([]);
-  for (const l of net.links) {
-    if (!l.twoWay || l.ux + l.uy < 0) continue; // draw centre line once per two-way pair
-    ctx.strokeStyle = P.center;
-    ctx.lineWidth = Math.max(0.8, 0.3 * scale);
-    line(ctx, X(l.x0), Y(l.y0), X(l.x1), Y(l.y1));
-  }
-
-  // Intersection boxes.
-  const inset = net.raw.intersectionInset;
-  for (const inter of net.intersections) {
-    ctx.fillStyle = P.road;
-    ctx.fillRect(X(inter.x - inset), Y(inter.y - inset), inset * 2 * scale, inset * 2 * scale);
-  }
-
-  // Street labels.
-  ctx.fillStyle = P.label;
-  ctx.font = F(600, Math.max(11, 12 * scale * 1.7));
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  for (const sl of net.raw.map.streetLabels) {
-    ctx.save();
-    ctx.translate(X(sl.x), Y(sl.y));
-    ctx.rotate((sl.angle * Math.PI) / 180);
-    ctx.fillText(sl.text, 0, 0);
-    ctx.restore();
-  }
-
   // Signals: stop bars coloured by the recorded signal state of each approach.
   for (const inter of net.intersections) {
-    const phase = frame ? frame.s[inter.idx * 2] : 0;
+    const phase = frame && frame.s.length === net.intersections.length * 2 ? frame.s[inter.idx * 2] : 0;
     const state = frame ? frame.s[inter.idx * 2 + 1] : 2;
     for (const li of inter.approaches) {
       const l = net.links[li];
-      const inPhase = inter.phases[phase].movements.some((mi) => net.movements[mi].from === li);
+      const inPhase = (inter.phases[phase] ?? inter.phases[0]).movements.some((mi) => net.movements[mi].from === li);
       const color = !frame ? P.red : inPhase && state === 0 ? P.green : inPhase && state === 1 ? P.yellow : P.red;
       const rx = -l.uy;
       const ry = l.ux;
@@ -372,9 +343,12 @@ export function drawFrame(
     const v = frame.v;
     const len = Math.min(6.4, Math.max(4.6, 4.6 * (W / 3.5)));
     const wid = W * 0.62;
+    const base = ctx.getTransform();
+    const nLinks = net.links.length;
     for (let i = 0; i < v.length; i += 4) {
       const id = v[i];
       const li = v[i + 1] >> 2;
+      if (li >= nLinks) continue; // replay/network mismatch guard
       const lane = v[i + 1] & 3;
       const p0 = vehicleWorld(net, li, lane, v[i + 2] / 10, W);
       let x = p0.x;
@@ -382,7 +356,7 @@ export function drawFrame(
       let ux = p0.ux;
       let uy = p0.uy;
       const j = next.get(id);
-      if (j !== undefined && alpha > 0) {
+      if (j !== undefined && alpha > 0 && (nv[j + 1] >> 2) < nLinks) {
         const p1 = vehicleWorld(net, nv[j + 1] >> 2, nv[j + 1] & 3, nv[j + 2] / 10, W);
         x = p0.x + (p1.x - p0.x) * alpha;
         y = p0.y + (p1.y - p0.y) * alpha;
@@ -394,22 +368,20 @@ export function drawFrame(
           uy = dy / d;
         }
       }
-      // Vehicle front is at x,y; draw body behind it.
-      ctx.save();
-      ctx.translate(X(x - ux * (len / 2)), Y(y - uy * (len / 2)));
-      ctx.rotate(Math.atan2(uy, ux));
+      // Vehicle front is at x,y; draw body behind it. One setTransform per car (no save/restore, no paths).
+      const cx = X(x - ux * (len / 2));
+      const cy = Y(y - uy * (len / 2));
+      ctx.setTransform(base.a * ux, base.a * uy, -base.a * uy, base.a * ux, base.a * cx + base.e, base.d * cy + base.f);
+      ctx.fillStyle = P.carStroke;
+      ctx.fillRect((-len / 2) * scale - 0.5, (-wid / 2) * scale - 0.5, len * scale + 1, wid * scale + 1);
       ctx.fillStyle = P.car;
-      ctx.strokeStyle = P.carStroke;
-      ctx.lineWidth = 0.6;
-      roundRect(ctx, (-len / 2) * scale, (-wid / 2) * scale, len * scale, wid * scale, 0.6 * scale);
-      ctx.fill();
-      ctx.stroke();
+      ctx.fillRect((-len / 2) * scale, (-wid / 2) * scale, len * scale, wid * scale);
       if (v[i + 3] === 1) {
         ctx.fillStyle = P.brake;
         ctx.fillRect((-len / 2) * scale, (-wid / 2) * scale, 0.7 * scale, wid * scale);
       }
-      ctx.restore();
     }
+    ctx.setTransform(base);
 
     // External entry queues (vehicles that could not yet enter the map).
     ctx.font = F(700, Math.max(10, 11 * scale * 1.6));
@@ -434,6 +406,9 @@ export function drawFrame(
     });
   }
 
+  }
+
+  if (!doStatic) return;
   if (land) drawIslandInset(ctx, net, cssW, cssH, P, F, landPath);
   if (net.raw.map.attribution) {
     ctx.textAlign = "right";
@@ -552,4 +527,56 @@ function drawIslandInset(
   ctx.textBaseline = "middle";
   ctx.fillText("modeled", ax - 12, ay + ah / 2);
   ctx.restore();
+}
+
+function drawMarkings(
+  ctx: CanvasRenderingContext2D,
+  net: Network,
+  X: (x: number) => number,
+  Y: (y: number) => number,
+  W: number,
+  scale: number,
+  P: MapPalette,
+  F: (w: number, px: number) => string,
+) {
+  // Lane markings.
+  ctx.setLineDash([3 * scale, 4 * scale]);
+  ctx.lineWidth = Math.max(0.6, 0.25 * scale);
+  for (const l of net.links) {
+    const rx = -l.uy;
+    const ry = l.ux;
+    for (let lane = 0; lane < l.lanes - 1; lane++) {
+      const off = l.twoWay ? (lane + 1) * W : (lane + 1 - l.lanes / 2) * W;
+      ctx.strokeStyle = P.laneDash;
+      line(ctx, X(l.x0 + rx * off), Y(l.y0 + ry * off), X(l.x1 + rx * off), Y(l.y1 + ry * off));
+    }
+  }
+  ctx.setLineDash([]);
+  for (const l of net.links) {
+    if (!l.twoWay || l.ux + l.uy < 0) continue; // draw centre line once per two-way pair
+    ctx.strokeStyle = P.center;
+    ctx.lineWidth = Math.max(0.8, 0.3 * scale);
+    line(ctx, X(l.x0), Y(l.y0), X(l.x1), Y(l.y1));
+  }
+
+  // Intersection boxes.
+  const inset = net.raw.intersectionInset;
+  for (const inter of net.intersections) {
+    ctx.fillStyle = P.road;
+    ctx.fillRect(X(inter.x - inset), Y(inter.y - inset), inset * 2 * scale, inset * 2 * scale);
+  }
+
+  // Street labels.
+  ctx.fillStyle = P.label;
+  ctx.font = F(600, Math.max(11, 12 * scale * 1.7));
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (const sl of net.raw.map.streetLabels) {
+    ctx.save();
+    ctx.translate(X(sl.x), Y(sl.y));
+    ctx.rotate((sl.angle * Math.PI) / 180);
+    ctx.fillText(sl.text, 0, 0);
+    ctx.restore();
+  }
+
 }

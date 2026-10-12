@@ -42,8 +42,8 @@ export const api = {
   loadRun: (runId: string) => req<{ ok: boolean }>("POST", "/api/runs/load", { runId }),
   sync: () => req<{ pulled: string[]; pushed: string[] }>("POST", "/api/sync"),
   check: () => req<{ ok: boolean; detail: string; latencyMs: number; provider: ProviderInfo }>("POST", "/api/check"),
-  replay: (scenario: string, controller: string) =>
-    req<Replay>("GET", `/api/replay?scenario=${encodeURIComponent(scenario)}&controller=${encodeURIComponent(controller)}`),
+  replay: (scenario: string, controller: string, run: string) =>
+    req<Replay & { runId?: string }>("GET", `/api/replay?scenario=${encodeURIComponent(scenario)}&controller=${encodeURIComponent(controller)}&run=${encodeURIComponent(run)}`),
 };
 
 export function subscribe(onState: (s: PublicState) => void, onAgents: (a: Pick<PublicState, "agents" | "activity" | "busy" | "progress" | "storage">) => void, onError: (m: string) => void): () => void {

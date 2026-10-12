@@ -7,6 +7,8 @@ import { config, redact, ROOT } from "./config";
 import { Orchestrator } from "./orchestrator";
 
 const orch = new Orchestrator();
+/** Serialized + gzipped replay bodies, keyed by run|scenario|controller (replays are deterministic). */
+const replayBodies = new Map<string, { json: string; gz: Buffer }>();
 const clients = new Set<ServerResponse>();
 
 function send(res: ServerResponse, status: number, body: unknown, req?: IncomingMessage, extraHeaders: Record<string, string> = {}) {
@@ -26,8 +28,16 @@ function broadcast(event: string, data: unknown) {
   for (const c of clients) c.write(payload);
 }
 
-orch.on("state", () => broadcast("state", orch.publicState()));
-orch.on("agents", () => broadcast("agents", { agents: Object.values(orch.agents), activity: orch.activity.slice(-60), busy: orch.busy, progress: orch.progress, storage: orch.publicState().storage }));
+// Coalesce bursts of state changes (e.g. several candidates finishing at once) into one push.
+let stateTimer: NodeJS.Timeout | null = null;
+orch.on("state", () => {
+  if (stateTimer) return;
+  stateTimer = setTimeout(() => {
+    stateTimer = null;
+    broadcast("state", orch.publicState());
+  }, 250);
+});
+orch.on("agents", () => broadcast("agents", { agents: Object.values(orch.agents), activity: orch.activity.slice(-60), busy: orch.busy, progress: orch.progress, storage: orch.storageStatus() }));
 
 async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> {
   const chunks: Buffer[] = [];
@@ -112,8 +122,23 @@ const server = createServer(async (req, res) => {
       return ok ? send(res, 200, { ok: true }) : send(res, 404, { error: "Run not found" });
     }
     if (p === "/api/replay" && req.method === "GET") {
-      const rep = orch.getReplay(url.searchParams.get("scenario") ?? "", url.searchParams.get("controller") ?? "");
-      return send(res, 200, rep, req);
+      const run = url.searchParams.get("run");
+      if (run && run !== orch.exp?.runId) return send(res, 409, { error: `Run changed (now ${orch.exp?.runId ?? "none"})` });
+      const scenario = url.searchParams.get("scenario") ?? "";
+      const controller = url.searchParams.get("controller") ?? "";
+      const resolved = controller === "champion" ? orch.exp?.championId ?? controller : controller;
+      const key = `${orch.exp?.runId}|${scenario}|${resolved}`;
+      let entry = replayBodies.get(key);
+      if (!entry) {
+        // Replays are numeric frames only (no secrets), so they skip redaction; serialize + gzip once, then reuse.
+        const json = JSON.stringify({ ...orch.getReplay(scenario, controller), runId: orch.exp?.runId });
+        entry = { json, gz: gzipSync(json, { level: 4 }) };
+        replayBodies.set(key, entry);
+        if (replayBodies.size > 24) replayBodies.delete(replayBodies.keys().next().value!);
+      }
+      const gzip = /\bgzip\b/.test(String(req.headers["accept-encoding"] ?? ""));
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", ...(gzip ? { "Content-Encoding": "gzip" } : {}) });
+      return res.end(gzip ? entry.gz : entry.json);
     }
     if (p === "/api/report" && req.method === "GET") {
       if (!orch.exp) return send(res, 404, { error: "No experiment" });

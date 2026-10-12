@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { networkFromRaw } from "../../sim/network";
+import { clock } from "./clock";
 import { api, subscribe, type PublicState, type Replay } from "./api";
 
 export interface ControllerOption {
@@ -7,25 +8,29 @@ export interface ControllerOption {
   label: string;
 }
 
-function useReplay(scenario: string | null, controller: string | null, runKey: string) {
-  const [replay, setReplay] = useState<Replay | null>(null);
+function useReplay(scenario: string | null, controller: string | null, runKey: string, runId: string | null) {
+  const [replay, setReplay] = useState<(Replay & { runId?: string }) | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    if (!scenario || !controller) return;
+    if (!scenario || !controller || !runId) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
+    // Never keep drawing a replay from another run (it may belong to a different network).
+    setReplay((prev) => (prev && prev.runId !== runId ? null : prev));
     api
-      .replay(scenario, controller)
-      .then((r) => !cancelled && setReplay(r))
-      .catch((e: Error) => !cancelled && setError(e.message))
+      .replay(scenario, controller, runId)
+      .then((r) => {
+        if (!cancelled && r.runId === runId) setReplay(r);
+      })
+      .catch((e: Error) => !cancelled && !/Run changed/.test(e.message) && setError(e.message))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
-  }, [scenario, controller, runKey]);
-  return { replay, loading, error };
+  }, [scenario, controller, runKey, runId]);
+  return { replay: replay && replay.runId === runId ? replay : null, loading, error };
 }
 
 export function useGreenwave() {
@@ -34,7 +39,6 @@ export function useGreenwave() {
   const [scenario, setScenario] = useState<string | null>(null);
   const [leftId, setLeftId] = useState("baseline-fixed");
   const [rightId, setRightId] = useState("champion");
-  const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(10);
   const [heat, setHeat] = useState(false);
@@ -65,8 +69,9 @@ export function useGreenwave() {
   }, [exp?.runId, scenarios.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resolvedRight = rightId === "champion" ? exp?.championId ?? null : rightId;
-  const left = useReplay(scenario, exp ? leftId : null, runKey);
-  const right = useReplay(scenario, exp ? resolvedRight : null, runKey);
+  const runId = exp?.runId ?? null;
+  const left = useReplay(scenario, exp ? leftId : null, runKey, runId);
+  const right = useReplay(scenario, exp ? resolvedRight : null, runKey, runId);
   const mismatch = !!(
     left.replay &&
     right.replay &&
@@ -85,18 +90,16 @@ export function useGreenwave() {
     const loop = (now: number) => {
       const dt = last.current === null ? 0 : (now - last.current) / 1000;
       last.current = now;
-      setT((prev) => {
-        const nt = Math.min(duration, prev + dt * speed);
-        if (nt >= duration) setPlaying(false);
-        return nt;
-      });
+      const nt = Math.min(duration, clock.get() + dt * speed);
+      clock.set(nt);
+      if (nt >= duration) setPlaying(false);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [playing, speed, duration]);
 
-  useEffect(() => setT(0), [scenario]);
+  useEffect(() => clock.set(0), [scenario]);
 
   const leftOptions: ControllerOption[] = exp
     ? [
@@ -124,8 +127,8 @@ export function useGreenwave() {
   }, []);
 
   const togglePlay = () => {
-    if (t >= duration) {
-      setT(0);
+    if (clock.get() >= duration) {
+      clock.set(0);
       setPlaying(true);
     } else setPlaying(!playing);
   };
@@ -151,8 +154,7 @@ export function useGreenwave() {
     mismatch,
     ready,
     duration,
-    t,
-    setT,
+    setT: clock.set,
     playing,
     setPlaying,
     togglePlay,

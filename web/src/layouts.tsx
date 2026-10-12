@@ -38,8 +38,8 @@ function Maps({ gw, theme, bare }: { gw: GW; theme: string; bare?: boolean }) {
   const net = gw.net!;
   return (
     <>
-      <MapPanel net={net} side="left" tag="BASELINE" replay={gw.ready ? gw.left.replay : null} loading={gw.left.loading} error={gw.left.error ?? (gw.mismatch ? "Replay mismatch: scenarios differ" : null)} t={gw.t} heat={gw.heat} palette={p} controllerId={gw.leftId} options={gw.leftOptions} onController={gw.setLeftId} bare={bare} />
-      <MapPanel net={net} side="right" tag="AGENT CHAMPION" replay={gw.ready ? gw.right.replay : null} loading={gw.right.loading} error={gw.right.error} t={gw.t} heat={gw.heat} palette={p} controllerId={gw.rightId} options={gw.rightOptions} onController={gw.setRightId} bare={bare} />
+      <MapPanel net={net} side="left" tag="BASELINE" replay={gw.ready ? gw.left.replay : null} loading={gw.left.loading} error={gw.left.error ?? (gw.mismatch ? "Replay mismatch: scenarios differ" : null)} heat={gw.heat} palette={p} controllerId={gw.leftId} options={gw.leftOptions} onController={gw.setLeftId} bare={bare} />
+      <MapPanel net={net} side="right" tag="AGENT CHAMPION" replay={gw.ready ? gw.right.replay : null} loading={gw.right.loading} error={gw.right.error} heat={gw.heat} palette={p} controllerId={gw.rightId} options={gw.rightOptions} onController={gw.setRightId} bare={bare} />
     </>
   );
 }

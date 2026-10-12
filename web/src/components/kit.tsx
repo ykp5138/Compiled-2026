@@ -3,12 +3,13 @@ import type { ActivityEvent, AgentStatus, CandidateRecord, Experiment } from "..
 import { api, fmt } from "../api";
 import { candidateCounts, champDev, fmtDur, lineage, liveAt, roundsTable, ROLE_LABEL, ROLES, timeline, type Role } from "../derive";
 import type { GW } from "../useGreenwave";
+import { useClock } from "../clock";
 
 export const roleVar = (r: string) => `var(--${r})`;
 
 const SPEEDS = [1, 5, 10, 20];
 
-export function clock(s: number) {
+export function fmtClock(s: number) {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 }
 
@@ -63,7 +64,7 @@ export function NetworkSwitch({ gw }: { gw: GW }) {
             type="button"
             aria-pressed={current === n.id}
             className={current === n.id ? "on" : ""}
-            disabled={!!gw.busy}
+            disabled={!!gw.busy || gw.left.loading || gw.right.loading}
             title={has ? `Load the best recorded ${n.name} run` : `No ${n.name} run yet: starts a new experiment (calibration takes about a minute)`}
             onClick={() => current !== n.id && pick(n.id)}
           >
@@ -193,6 +194,7 @@ export function Notices({ gw }: { gw: GW }) {
 /* ---------- Playback ---------- */
 
 export function PlaybackBar({ gw, compact }: { gw: GW; compact?: boolean }) {
+  const t = useClock();
   return (
     <section className={`playback ${compact ? "compact" : ""}`} aria-label="Playback">
       <button type="button" className="btn icon" aria-label="Restart" onClick={() => { gw.setT(0); gw.setPlaying(false); }}>
@@ -206,10 +208,10 @@ export function PlaybackBar({ gw, compact }: { gw: GW; compact?: boolean }) {
         )}
       </button>
       <label htmlFor={`scrub-${compact ? "c" : "f"}`} className="hint">REPLAY</label>
-      <input id={`scrub-${compact ? "c" : "f"}`} className="scrub" type="range" min={0} max={gw.duration} step={0.5} value={gw.t} onChange={(e) => gw.setT(Number(e.target.value))} />
+      <input id={`scrub-${compact ? "c" : "f"}`} className="scrub" type="range" min={0} max={gw.duration} step={0.5} value={t} onChange={(e) => gw.setT(Number(e.target.value))} />
       <span className="clock">
-        {clock(gw.t)} <span className="muted">/ {clock(gw.duration)}</span>
-        {gw.left.replay && gw.t > gw.left.replay.horizon && <span className="muted"> · drain</span>}
+        {fmtClock(t)} <span className="muted">/ {fmtClock(gw.duration)}</span>
+        {gw.left.replay && t > gw.left.replay.horizon && <span className="muted"> · drain</span>}
       </span>
       <div className="speeds" role="group" aria-label="Playback speed">
         {SPEEDS.map((s) => (
@@ -226,8 +228,9 @@ export function PlaybackBar({ gw, compact }: { gw: GW; compact?: boolean }) {
 /* ---------- Head-to-head scoreboard (live) ---------- */
 
 export function Scoreboard({ gw }: { gw: GW }) {
-  const L = liveAt(gw.left.replay, gw.t);
-  const R = liveAt(gw.right.replay, gw.t);
+  const t = useClock();
+  const L = liveAt(gw.left.replay, t);
+  const R = liveAt(gw.right.replay, t);
   const rows: { label: string; l: number | null; r: number | null; f: (x: number) => string; lowerBetter: boolean }[] = [
     { label: "Stopped s / scheduled veh", l: L?.stoppedPerVeh ?? null, r: R?.stoppedPerVeh ?? null, f: (x) => x.toFixed(1), lowerBetter: true },
     { label: "Trips completed", l: L?.completed ?? null, r: R?.completed ?? null, f: (x) => String(x), lowerBetter: false },
@@ -238,7 +241,7 @@ export function Scoreboard({ gw }: { gw: GW }) {
   return (
     <section className="scoreboard" aria-label="Head-to-head scoreboard">
       <h2 className="label">Head to head</h2>
-      <div className="sb-clock">{clock(gw.t)}</div>
+      <div className="sb-clock">{fmtClock(t)}</div>
       {rows.map((row) => {
         const lb = row.l !== null && row.r !== null && (row.lowerBetter ? row.l < row.r : row.l > row.r);
         const rb = row.l !== null && row.r !== null && (row.lowerBetter ? row.r < row.l : row.r > row.l);
@@ -252,7 +255,7 @@ export function Scoreboard({ gw }: { gw: GW }) {
       })}
       <div className="sb-meter">
         <div className="sb-meter-l">Champion so far</div>
-        <div className={`sb-meter-v ${pct !== null && pct > 0 ? "good" : pct !== null && pct < 0 ? "bad" : ""}`}>{pct === null || gw.t < 30 ? "–" : `${pct >= 0 ? "" : "−"}${Math.abs(pct).toFixed(1)}% ${pct >= 0 ? "less" : "more"} stopping`}</div>
+        <div className={`sb-meter-v ${pct !== null && pct > 0 ? "good" : pct !== null && pct < 0 ? "bad" : ""}`}>{pct === null || t < 30 ? "–" : `${pct >= 0 ? "" : "−"}${Math.abs(pct).toFixed(1)}% ${pct >= 0 ? "less" : "more"} stopping`}</div>
       </div>
     </section>
   );
